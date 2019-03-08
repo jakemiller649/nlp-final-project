@@ -15,12 +15,16 @@ to do:
 common elements:
 - embedding layer
 
+so I need the following structure
+- conversation
+  - sentence
+    - word / punctuation / EOS
+
 embeddings
 - this looks like something I should probably know for JL too: https://github.com/RaRe-Technologies/gensim
 - alternative embedding: https://github.com/alexandres/lexvec
-- not sure what this: https://github.com/RaRe-Technologies/gensim
 - glove download: https://nlp.stanford.edu/projects/glove/
-- sense2vec
+- sense2vec?
 
 lee and dernoncourt https://arxiv.org/pdf/1603.03827.pdf in short, it manufactures features from each sentence
 - convolutional layer takes x_l words as inputs
@@ -29,6 +33,7 @@ lee and dernoncourt https://arxiv.org/pdf/1603.03827.pdf in short, it manufactur
  - each s2v comes from each "short text" ... you have the option to feed in the previous
  - hyper parameters d1 and d2 are history sizes used in each layer
  - 10 epochs? also what is early stopping, I forget
+   - early stopping means you stop training when no progress is made on validation after x many epochs. x here is called the "patience"
  - also, first FF layer is tanh, second is softmax
  - d from 0 to 1 was chosen
  - pretrained word embeddings on glove (200, twitter) or word2vec (300, google news)
