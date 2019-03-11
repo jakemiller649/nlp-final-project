@@ -1,3 +1,7 @@
+https://www.nltk.org/api/nltk.html
+https://machinelearningmastery.com/sequence-classification-lstm-recurrent-neural-networks-python-keras/
+
+
 to figure out:
 - how to
 - did goo and chen use attention?
@@ -5,12 +9,18 @@ to figure out:
 - take all the hyperparameters and do a linear regression to show impact of each one (??)
 - BERT???
 
+what is attention:
+-
+
+
 to do:
 - benchmark with Naive Bayes/random forest,  tf-idf bigrams as features
 - might need to evaluate as conversations (to do Kumar) or as individual sentences
 - may need to do some coding on original to make this work
 - what do Goo do? As convos or as sentences?
 - then it becomes -- do I split on conversation, or on sentence (is there a equivalent to clustering??)
+
+- I guess I do a basic version with each utterance as input ... then a fancier version with conversations as inputs?
 
 common elements:
 - embedding layer
