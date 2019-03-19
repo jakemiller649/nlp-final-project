@@ -1,6 +1,8 @@
 https://www.nltk.org/api/nltk.html
 https://machinelearningmastery.com/sequence-classification-lstm-recurrent-neural-networks-python-keras/
 
+https://blog.keras.io/using-pre-trained-word-embeddings-in-a-keras-model.html
+
 
 to figure out:
 - how to
