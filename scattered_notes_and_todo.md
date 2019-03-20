@@ -3,6 +3,11 @@ https://machinelearningmastery.com/sequence-classification-lstm-recurrent-neural
 
 https://blog.keras.io/using-pre-trained-word-embeddings-in-a-keras-model.html
 
+notes on data generators: https://stanford.edu/~shervine/blog/keras-how-to-generate-data-on-the-fly
+and: https://keras.io/utils/#sequence
+
+notes on CRF usage: https://www.depends-on-the-definition.com/sequence-tagging-lstm-crf/
+
 
 to figure out:
 - how to
