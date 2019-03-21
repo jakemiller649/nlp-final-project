@@ -19,13 +19,22 @@ to figure out:
 what is attention:
 -
 
+Items for analysis:
+- how is this corpus different
+- why did some models perform better?
+- are my models explainable?
+- how do my models differ not just in accuracy but also in speed? (training time)
+- compare how goo classifies utterances
+
 
 to do:
+- re-read papers and create notes with paper cards
 - benchmark with Naive Bayes/random forest,  tf-idf bigrams as features
 - might need to evaluate as conversations (to do Kumar) or as individual sentences
 - may need to do some coding on original to make this work
 - what do Goo do? As convos or as sentences?
 - then it becomes -- do I split on conversation, or on sentence (is there a equivalent to clustering??)
+- some sort of export function with accuracy, confusion matrix, hyperparameters, model type (export as json)
 
 - I guess I do a basic version with each utterance as input ... then a fancier version with conversations as inputs?
 
