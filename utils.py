@@ -10,20 +10,6 @@ from sklearn.model_selection import train_test_split
 # import numpy as np
 # import pandas as pd
 
-class Word:
-    """
-    Desription
-    Methods
-    Attributes
-    """
-
-    # file
-    # id
-    # start time,
-    # end time, because fuck it just in case
-    # duration
-    pass
-
 class Utterance:
     """
     Desription
@@ -38,6 +24,7 @@ class Utterance:
         self.convo_id = convo_id
         self.da_type = None
         self.length = 0
+        self.words = []
 
     def __len__(self):
         return self.length
@@ -63,11 +50,53 @@ class Conversation:
 
     def add(self, utterance):
         """ Add utterance to this conversation"""
+
         self.utterances.append(utterance)
         self.length += 1
         self.labels.append(utterance.da_type)
         if len(utterance) > self.max_utterance_length:
             self.max_utterance_length = len(utterance)
+
+    def get_words(self, filedir):
+        """adfasdf"""
+
+        words = []
+
+        with open(filedir + "\\words\\" + self.convo_id + ".words.xml") as infile:
+            # open file, parse xml
+            convo_tree = ET.parse(infile)
+            convo_root = convo_tree.getroot()
+
+        for utterance in self.utterances:
+
+            # add starting token
+
+            ### JAKE PICK UP HERE #####
+
+            for i in range(utterance.start, utterance.end+1):
+                word = convo_root[i].text
+
+                # is it a digit?
+
+
+                # does it have an apostrophe?
+
+
+                # is it punctuation
+                # do pretrained vectors use punctuation???
+
+
+                # lowercase
+                #
+
+                utterance.words.append(word)
+                words.append(word)
+
+            # add ending token
+            # update token length
+
+        # return words to corpus for counting
+        return words
 
 
 class Corpus:
@@ -76,8 +105,6 @@ class Corpus:
     Methods
     Attributes
     """
-
-    # read in all convs
 
     # create generator function
 
@@ -88,16 +115,18 @@ class Corpus:
         self.conversations = []
         self.max_utterance_length = 0
         self.max_conversation_length = 0
+        self.utterance_lengths = []
+        self.conversation_lengths = []
 
 
         if filedir is None:
-            filedir = os.getcwd() + "\\data\\dialogueActs"
+            filedir = os.getcwd() + "\\data"
         print("Loading corpus from", filedir)
 
-        for file in tqdm_notebook(os.listdir(filedir)):
+        for file in tqdm_notebook(os.listdir(filedir + "\\dialogueActs")):
 
             if file.endswith("dialog-act.xml"):
-                with open(filedir + "\\" + file) as infile:
+                with open(filedir + "\\dialogueActs\\" + file) as infile:
                     # open file, parse xml
                     convo_tree = ET.parse(infile)
                     convo_root = convo_tree.getroot()
@@ -140,15 +169,15 @@ class Corpus:
                         utterance.end = int(s[0][5:])
                         utterance.length = 1
 
-                    # get words from the other file that has the words
-                    #utterance.get_words()
-
                     # add this utterance to our conversation
-
+                    self.utterance_lengths.append(utterance.length)
                     conversation.add(utterance)
 
+                # get words from the other file that has the words
+                conversation.get_words(filedir = filedir)
 
-
+                # add converation to corpus
+                self.conversation_lengths.append(conversation.length)
                 self.add_conversation(conversation)
         # cue corpus post-processing
         print("Begin corpus post-processing")
@@ -157,18 +186,22 @@ class Corpus:
         self.conversations.append(conversation)
 
         # keep track of the longest utterances in the corpus
+        ### DELETE ###
         if conversation.max_utterance_length > self.max_utterance_length:
-            self.max_utterance_length = converation.max_utterance_length
+            self.max_utterance_length = conversation.max_utterance_length
 
         # and the longest conversations
         if conversation.length > self.max_conversation_length:
             self.max_conversation_length = conversation.length
 
     def pad_utterances():
+        # figure out 99th percentile of utterance length
+
         pass
     # pad utterances
 
     def pad_conversations():
+        # figure out 99th percentile of utterance length
         pass
     # pad convos
 
@@ -178,9 +211,16 @@ class Corpus:
         pass
 
     def create_vocab(self, max_vocab = 10000):
+        print("Creating vocabulary from training set")
+
+        # also create unknown tokens -- how to initialize? (randomly with seed?)
+
         pass
 
+    def words_to_ids():
+        # convert words to ids
+        pass
 
-    # create vocab for train
-    # create pre-trained embedding matrix
-    # https://blog.keras.io/using-pre-trained-word-embeddings-in-a-keras-model.html
+    def create_embed_matrix():
+        # https://blog.keras.io/using-pre-trained-word-embeddings-in-a-keras-model.html
+        pass
