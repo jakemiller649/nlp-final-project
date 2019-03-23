@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 import re
 from tqdm import tqdm_notebook
 from sklearn.model_selection import train_test_split
+from collections import Counter
 
 # import numpy as np
 # import pandas as pd
@@ -46,7 +47,7 @@ class Conversation:
         self.labels = []          # list of labels
         self.length = 0           # conversation length
         self.max_utterance_length = 0   # length of longest utterance
-        # to add: unique words
+        self.vocab = Counter() # unique words and their frequencies
 
     def add(self, utterance):
         """ Add utterance to this conversation"""
@@ -60,12 +61,24 @@ class Conversation:
     def get_words(self, filedir):
         """adfasdf"""
 
-        words = []
-
         with open(filedir + "\\words\\" + self.convo_id + ".words.xml") as infile:
             # open file, parse xml
             convo_tree = ET.parse(infile)
             convo_root = convo_tree.getroot()
+
+        # the leaf numbers do not align perfectly with word numbers, so we need to make sure we are
+        # getting the correct words for each utterance
+        convo_words = {}
+        for leaf in convo_root:
+            #if leaf.tag is 'w':
+            # going to need some way to handle vocal sounds
+            try:
+                word_idx = int(leaf.attrib['{http://nite.sourceforge.net/}id'].split('words')[1])
+            except:
+                # some of them have 'wordsx' and I don't know why
+                pass
+            w = leaf.text
+            convo_words[word_idx] = w
 
         for utterance in self.utterances:
 
@@ -74,30 +87,22 @@ class Conversation:
             ### JAKE PICK UP HERE #####
 
             for i in range(utterance.start, utterance.end+1):
-                word = convo_root[i].text
+                try:
+                    word = convo_words[i]
+                except:
+                    # sometimes they skip numbers
+                    pass
 
                 # is it a digit?
-
-
-                # does it have an apostrophe?
-
-
                 # is it punctuation
                 # do pretrained vectors use punctuation???
-
-
                 # lowercase
-                #
 
-                utterance.words.append(word)
-                words.append(word)
-
+                if word is not None:
+                    utterance.words.append(word.lower())
+                    self.vocab[word] += 1
             # add ending token
             # update token length
-
-        # return words to corpus for counting
-        return words
-
 
 class Corpus:
     """
@@ -108,7 +113,7 @@ class Corpus:
 
     # create generator function
 
-    def __init__(self, filedir = None):
+    def __init__(self, filedir = None, seed = None, max_vocab = 20000, embed_vec = None):
         """Load corpus from file"""
 
         # initialize some attributes
@@ -174,13 +179,22 @@ class Corpus:
                     conversation.add(utterance)
 
                 # get words from the other file that has the words
-                conversation.get_words(filedir = filedir)
+                w = conversation.get_words(filedir = filedir)
 
                 # add converation to corpus
                 self.conversation_lengths.append(conversation.length)
                 self.add_conversation(conversation)
         # cue corpus post-processing
         print("Begin corpus post-processing")
+
+        # split into test and training
+        self.training_split(split_seed = seed)
+
+        # create vocab
+        self.create_vocab(max_vocab)
+
+        # create initial embedding matrix
+        create_embed_matrix(self, embed_vec)
 
     def add_conversation(self, conversation):
         self.conversations.append(conversation)
@@ -207,20 +221,55 @@ class Corpus:
 
 
     # split into train and test (seed)
-    def training_split(self, seed = None):
-        pass
+    def training_split(self, split_seed = None):
+        """ Splits corpus into training and test sets. Split is done at the conversation level
+        Args: split_seed (a random seed for reproducibility)
+        Returns: training conversations, test conversations
+        """
+        print("Splitting corpus into training and test")
 
-    def create_vocab(self, max_vocab = 10000):
-        print("Creating vocabulary from training set")
+        from random import seed, shuffle
+        from math import floor
 
-        # also create unknown tokens -- how to initialize? (randomly with seed?)
+        if split_seed is not None:
+            seed(split_seed)
 
+        split_point = floor(len(self.conversations)*0.8)
+        shuffle(self.conversations)
+        self.train_convos = self.conversations[:split_point]
+        self.test_convos = self.conversations[split_point:]
+
+    def create_vocab(self, max_vocab):
+        """doc
+        Args: max_vocab = number of words you want to include in dictionary (default: 20k)
+        """
+
+        print("Creating vocabulary from training set ...")
+        self.words = Counter()
+        for conversation in self.train_convos:
+            self.words += conversation.vocab
+
+        ### JAKE PICK UP HERE ######
         pass
 
     def words_to_ids():
+        """doc"""
+
+        print("Creating word IDs ...")
         # convert words to ids
+        # needs to be a default dict that returns <unk> if it's not in there
         pass
 
-    def create_embed_matrix():
+    def create_embed_matrix(self, embed_vec):
+        """
+        docstring
+        Args:
+          - embed_vec -- one of None (default), 'glove200', 'glove300', 'numberbatch', or 'lexvec'
+        """
+        vector_dir = "../../pretrained_vectors/"
+
+
         # https://blog.keras.io/using-pre-trained-word-embeddings-in-a-keras-model.html
+        # also create unknown tokens -- how to initialize? (randomly with seed?)
+
         pass

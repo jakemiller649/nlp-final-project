@@ -14,7 +14,6 @@ to figure out:
 - did goo and chen use attention?
 - did any of them use attention? how does one use attention?
 - take all the hyperparameters and do a linear regression to show impact of each one (??)
-- BERT???
 
 what is attention:
 -
@@ -25,7 +24,6 @@ Items for analysis:
 - are my models explainable?
 - how do my models differ not just in accuracy but also in speed? (training time)
 - compare how goo classifies utterances
-
 
 to do:
 - re-read papers and create notes with paper cards
