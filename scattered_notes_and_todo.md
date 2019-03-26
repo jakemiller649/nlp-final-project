@@ -8,6 +8,8 @@ and: https://keras.io/utils/#sequence
 
 notes on CRF usage: https://www.depends-on-the-definition.com/sequence-tagging-lstm-crf/
 
+random notes to self
+- corpus for spoken convo has many fewer unique words
 
 to figure out:
 - how to
@@ -24,6 +26,7 @@ Items for analysis:
 - are my models explainable?
 - how do my models differ not just in accuracy but also in speed? (training time)
 - compare how goo classifies utterances
+- not on colloquialisms -- 'em,
 
 to do:
 - re-read papers and create notes with paper cards
