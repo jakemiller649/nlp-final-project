@@ -24,6 +24,7 @@ Items for analysis:
 - how is this corpus different
 - why did some models perform better?
 - are my models explainable?
+- use LIME??
 - how do my models differ not just in accuracy but also in speed? (training time)
 - compare how goo classifies utterances
 - not on colloquialisms -- 'em,

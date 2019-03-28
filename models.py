@@ -1,56 +1,38 @@
-import tensorflow as tf
-# or, import keras
+"""description goes here"""
 
-def embedding_layer(ids_, V, embed_dim, init_scale=0.001):
-    """Construct an embedding layer.
+import numpy as np
+from keras.models import Model
+from keras.layers import Dense, Dropout, Activation, Embedding
+from keras.layers import Conv1D, MaxPooling1D, LSTM, Bidirectional
+from keras.callbacks import EarlyStopping, CSVLogger # maybe more
+from sklearn.naive_bayes import MultinomialNB
 
-    Initialization options include:
-        - word2vec
-        - GloVe
-        - random_uniform_initializer
-        - others???
+class BiLSTMSoftmax:
+    # eventually change name
+    """model pased on Khanpour et al """
 
-    You should define a variable for the embedding matrix, and initialize it
-    using tf.random_uniform_initializer to values in [-init_scale, init_scale].
-    Hint: use tf.nn.embedding_lookup
-    Args:
-        ids_: [batch_size, max_len] Tensor of int32, integer ids
-        V: (int) vocabulary size
-        embed_dim: (int) embedding dimension
-        init_scale: (float) scale to initialize embeddings
-    Returns:
-        xs_: [batch_size, max_len, embed_dim] Tensor of float32, embeddings for
-            each element in ids_
-    """
+    def __init__(self, corpus, base, output, **params):
+        """ xxx """
 
-    W_embed_ = tf.get_variable("W_embed", shape=[V, embed_dim],
-                        initializer=tf.random_uniform_initializer(minval=-init_scale, maxval=init_scale))
+        pass
 
 
-    xs_ = tf.nn.embedding_lookup(params = W_embed_, ids = ids_)
+class CNN:
+    """yada yada yada"""
 
-    return xs_
+    def __init__(self, corpus):
+        pass
 
-def feed_forward_layers():
+class BiLSTMCRF:
+    """Model based on Kumar et al 2018, the current high score on the
+       switchboard corpus."""
 
-    """This will be just like what I did in A3."""
-    pass
+    def __init__(self, corpus):
 
-def softmax_output_layer():
-    """Again, just like A3"""
-    pass
+        pass
 
-def CRF_output_layer_():
-    """New wrinkle: in addition to softmax output, we will try CRF"""
+class NaiveBayes():
+    """In order to have a baseline to compare against."""
 
-
-def CNN_layers():
-    pass
-
-def LSTM_layers():
-    pass
-
-def fully_formed_model():
-    """ will take args about the embedding (what kind), the base model (cnn vs lstm), what their hyperparameters will be
-    and what type of output layer"""
-    pass
+    def __init__(self, corpus, tfidf = False, **kwargs):
+        pass

@@ -1,8 +1,5 @@
 """Summary of what's contained in this module:
 
-TO DO
-- need to finish create vocab function
-- need to finish embed matrix function
 """
 
 
@@ -165,13 +162,11 @@ class AMI_Corpus:
     # create generator function
 
     def __init__(self, filedir = None, seed = None,
-                 max_vocab = 10000, embed_vec = None, embed_dim = 200):
+                 max_vocab = 10000, embed_vec = None, embed_dim = 100):
         """Load corpus from file"""
 
         # initialize some attributes
         self.conversations = []
-        self.max_utterance_length = 0
-        self.max_conversation_length = 0
         self.utterance_lengths = []
         self.conversation_lengths = []
         self.max_vocab = max_vocab
@@ -235,7 +230,8 @@ class AMI_Corpus:
 
                 # add converation to corpus
                 self.conversation_lengths.append(conversation.length)
-                self.add_conversation(conversation)
+                self.conversations.append(conversation)
+
         # cue corpus post-processing
         print("Begin corpus post-processing ...")
 
@@ -248,31 +244,6 @@ class AMI_Corpus:
         # create initial embedding matrix
         self.create_embed_matrix(embed_vec, embed_dim)
 
-    def add_conversation(self, conversation):
-        self.conversations.append(conversation)
-
-        # keep track of the longest utterances in the corpus
-        ### DELETE ###
-        if conversation.max_utterance_length > self.max_utterance_length:
-            self.max_utterance_length = conversation.max_utterance_length
-
-        # and the longest conversations
-        if conversation.length > self.max_conversation_length:
-            self.max_conversation_length = conversation.length
-
-    def pad_utterances():
-        # figure out 99th percentile of utterance length
-
-        pass
-    # pad utterances
-
-    def pad_conversations():
-        # figure out 99th percentile of utterance length
-        pass
-    # pad convos
-
-
-    # split into train and test (seed)
     def training_split(self, split_seed = None):
         """ Splits corpus into training and test sets. Split is done at the conversation level
         Args: split_seed (a random seed for reproducibility)
@@ -289,14 +260,16 @@ class AMI_Corpus:
         split_point = floor(len(self.conversations)*0.8)
         shuffle(self.conversations)
         self.train_convos = self.conversations[:split_point]
+
         self.test_convos = self.conversations[split_point:]
 
     def create_vocab(self, max_len = None):
         """doc
         Args:
           - max_vocab = number of words you want to include in dictionary (default: 10k)
-          - max_len
+          - max_len = maximum utterance length; calculated below if None provided
         """
+        from math import floor
 
         print("Creating vocabulary from training set ...")
         self.words = Counter()
@@ -304,27 +277,45 @@ class AMI_Corpus:
             self.words += conversation.vocab
 
         print("Found", len(self.words), "unique words.")
-        if len(self.words) > self.max_vocab:
+        if len(self.words) < self.max_vocab:
             self.max_vocab = len(self.words)
 
         ### reusing some code from 266 utils ######
         top_counts = self.words.most_common(self.max_vocab)
-        vocab = ["<unk>"] +  [w for w,c in top_counts]
+        vocab = ["<pad>", "<unk>"] +  [w for w,c in top_counts]
 
         # maps words to
         self.id_to_word = dict(enumerate(vocab))
         self.word_to_id = {v:k for k,v in self.id_to_word.items()}
 
         # create id sequences for utterances, padding/clipping where appropriate
+        if max_len is None:
+            max_len = floor(np.percentile(self.utterance_lengths, 99))
+
+
         for convo in self.train_convos:
             for u in convo.utterances:
-                pass
-            pass
+                # 1 maps to <unk>
+                ids = [self.word_to_id.get(i, 1) for i in u.words]
+                if len(ids) >= max_len:
+                    # clip
+                    u.word_ids = np.array(ids[:max_len])
+                else:
+                    # pad
+                    ids = ids + (max_len - len(ids))*[0]
+                    u.word_ids = np.array(ids)
 
         for convo in self.test_convos:
-            pass
-
-
+            for u in convo.utterances:
+                # 1 maps to <unk>
+                ids = [self.word_to_id.get(i, 1) for i in u.words]
+                if len(ids) >= max_len:
+                    # clip
+                    u.word_ids = np.array(ids[:max_len])
+                else:
+                    # pad
+                    ids = ids + (max_len - len(ids))*[0]
+                    u.word_ids = np.array(ids)
 
     def create_embed_matrix(self, embed_vec, embed_dim):
         """
@@ -343,34 +334,48 @@ class AMI_Corpus:
 
         vector_dir = "../../pretrained_vectors/"
 
-        filenames = {"glove100":"glove.6B.100d.txt",
-                     "glove200":"glove.6B.200d.txt",
-                     "glove300":"glove.6B.300d.txt",
-                     "numberbatch":"numberbatch-en.txt", # 300d
-                     "lexvec":"lexvec.commoncrawl.300d.W.pos.neg3.vectors"} #300d
+        filenames = {"glove100":["glove.6B.100d.txt", 100],
+                     "glove200":["glove.6B.200d.txt", 200],
+                     "glove300":["glove.6B.300d.txt", 300],
+                     "numberbatch":["numberbatch-en.txt", 300], # 300d
+                     "lexvec":["lexvec.commoncrawl.300d.W.pos.neg3.vectors", 300]} #300d
 
-        # initialize matrix to zeros
-        self.init_embedding_matrix = np.zeros(shape = (self.max_vocab, embed_dim))
-        # initialize <unk> token to random
-        self.init_embedding_matrix[0] = np.random.uniform(low = -1, high = 1, size = [embed_dim])
+        if embed_vec is not None:
+            embed_dim = filenames[embed_vec][1]
 
-        unfound_ids = {i:None for i in range(len(self.words))}
-        # open vector file
-        with open(vector_dir + filenames[embed_vec], 'r', encoding = 'utf-8') as file:
-            for line in file:
-                l = line.rstrip("\n").split(" ")
-                if l[0] in self.word_to_id:
-                    n = self.word_to_id[l[0]]
-                    _ = unfound_ids.pop(n, None)
-                    # add vector to matrix
+            # initialize matrix to random
+            self.init_embedding_matrix = np.random.uniform(low = -1, high = 1, size = [self.max_vocab + 2, embed_dim])
+            print(self.init_embedding_matrix.shape)
 
-        # leave this, make a note of how many words not found
-        self.unfound_words = [self.id_to_word[i] for i in unfound_ids]
-        #for i in len(self)
+            unfound_ids = {i:None for i in range(len(self.words))}
+            # open vector file
+            print("loading pretrained vectors from", filenames[embed_vec][0])
+            with open(vector_dir + filenames[embed_vec][0], 'r', encoding = 'utf-8') as file:
+                for line in file:
+                    l = line.rstrip("\n").split(" ")
+                    if l[0] in self.word_to_id:
+                        # mark it as found for internal tracking
+                        n = self.word_to_id[l[0]]
+                        _ = unfound_ids.pop(n, None)
 
+                        # add vector to matrix
+                        self.init_embedding_matrix[n] = [float(i) for i in l[1:]]
+
+            # leave this, make a note of how many words not found
+            #self.unfound_words = [self.id_to_word[i] for i in unfound_ids]
+            self.unfound_words = len(unfound_ids)
+            #for i in len(self)
+
+        else:
+            # no pretrained vectors, just initialize a random matrix
+            self.init_embedding_matrix = np.random.uniform(low = -1, high = 1, size = [self.max_vocab + 1, embed_dim])
+            print(self.init_embedding_matrix.shape)
+            self.unfound_words = None
 
 class UtteranceGenerator(Sequence):
-    """doc string goes here"""
+    """
+    Inherits Keras Sequence class to optimize multiprocessing
+    doc string goes here"""
 
     def __init__(self, corpus, mode, batch_size):
         """
@@ -412,3 +417,8 @@ class UtteranceGenerator(Sequence):
             The number of batches in the Sequence.
         """
         return int(np.ceil(len(self.combined_utterances) / float(self.batch_size)))
+
+    def __iter__(self):
+        """Create a generator that iterate over the Sequence."""
+        for item in (self[i] for i in range(len(self))):
+            yield item
