@@ -2,12 +2,12 @@
 
 import numpy as np
 from keras.models import Model
-from keras.layers import Input, Dense, Dropout, Activation, Embedding, Reshape
+from keras.layers import Input, Dense, Dropout, Activation, Embedding, Reshape, Concatenate
 from keras.layers import Conv1D, MaxPooling1D, LSTM, Bidirectional, GlobalMaxPooling1D
 from keras.callbacks import EarlyStopping, CSVLogger # maybe more
 from sklearn.naive_bayes import MultinomialNB
 
-def embedding_layer(corpus, embed_dim, batch_size, comb_seq_len, inputs):
+def embedding_layer(corpus, embed_dim, batch_size, inputs):
     return Embedding(input_dim = len(corpus.word_to_id),
                        output_dim = embed_dim,
                        weights = [corpus.init_embedding_matrix],
@@ -36,7 +36,7 @@ class CNN:
     Longer explanation goes here.
     """
 
-    def __init__(self, corpus, batch_size, d1 = 0, d2 = 0):
+    def __init__(self, corpus, batch_size, conv_params, hidden_units, d1 = 0, d2 = 0):
         """
         """
 
@@ -47,43 +47,57 @@ class CNN:
         self.seq_length = d1 + d2 + 1
         self.batch_size = batch_size
         self.embed_dim = corpus.embed_dim
+        self.conv_params = conv_params
+        self.hidden_units = hidden_units
+        self.d1 = d1
+        self.d2 = d2
 
-    def build_model(self, conv_params):
+    def build_model(self):
+
         # input shape is [batch_size, seq_length, utterance_length]
-        if self.seq_length == 1:
-            inputs_ = Input(shape=(self.corpus.max_utt_length,), name="input")
-            inputs_rs_ = inputs_
-            comb_seq_len = self.corpus.max_utt_length
-        else:
-            inputs_ = Input(shape=(self.seq_length, self.corpus.max_utt_length), name="input")
-            inputs_rs_ = Reshape((-1,) )(inputs_)
-            comb_seq_len = self.seq_length * self.corpus.max_utt_length
-            # essentially, we are combining a whole sequence of inputs into one big input
+        inputs_ = Input(shape=(self.seq_length, self.corpus.max_utt_length), name="input")
 
         # embedding
-        x_ = embedding_layer(corpus = self.corpus, comb_seq_len = comb_seq_len,
+        x_ = embedding_layer(corpus = self.corpus,
                              batch_size = self.batch_size, embed_dim = self.embed_dim,
-                             inputs = inputs_rs_)
-        # output: [batch_size, seq_length * utt_length, embed_dim]
-
-        # add dropout?
+                             inputs = inputs_)
+        # output: [batch_size, seq_length, utt_length, embed_dim]
 
         # convolutional layers
-        x_ = Conv1D(filters = conv_params['filters'],
-                    kernel_size = conv_params['kernel_size'],
-                    activation='relu')(x_)
-        # shape is now [batch_size, seq_length, ??]
+        stv_s_ = []
+        for i in range(self.seq_length):
+            u_ = x_[:,i,:,:] # selecting utterance at a time
+            # shape is now [batch_size, utt_length, embed_dim]
+            u_ = Conv1D(filters = self.conv_params['filters'],
+                        kernel_size = self.conv_params['kernel_size'],
+                        activation='relu')(u_)
+                        # shape is now [batch_size, (utt_length - kernel_size + 1), filters]
 
-        stv_ = GlobalMaxPooling1D()(x_)
-        #stv_ = MaxPooling1D()(x_)
-        # output shape is now [batch_size, seq_length, filters]
+            stv_ = GlobalMaxPooling1D()(u_)
+            # shape is now [batch_size, filters]
 
-        #stv_ = Reshape((-1))(stv_)
-        # start with simple feed forward
-        ff_ = Dense(64, activation='relu')(stv_)
+            # APPLY DROPOUT HERE ???
 
-        # this 10 is wrong, obviously
-        predictions = Dense(10, activation='softmax')(ff_)
+            stv_s_.append(stv_)
+
+        # we now construct FF layers for t-d2 ..., t-1, t
+        ff_outputs = []
+        for f in range(-self.d2-1,0):
+            # every FF layer f takes as inputs f-d1, ... f-1, f
+            s_ = stv_s_[f - self.d1: f+1]
+            s_ = Concatenate(axis = -1)(s_)
+            # shape is now [batch, filters * (d1+1)]
+            ff_ = Dense(self.hidden_units, activation='relu')(s_)
+            # shape is now [batch_size, hidden_units]
+
+        # concatenate FF outputs
+        ff_t_ = Concatenate(axis = -1)
+        # shape is now [batch_size, (d2+1) * hidden_units]
+
+        # ANOTHER DROPOUT??
+
+        # output layer
+        predictions = Dense(16, activation='softmax')(ff_t_)
 
         self.model = Model(inputs = inputs_, outputs=predictions)
 
