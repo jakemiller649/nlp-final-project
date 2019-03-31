@@ -3,7 +3,7 @@
 import numpy as np
 from keras.models import Model
 from keras.layers import Input, Dense, Dropout, Activation, Embedding, Reshape, Concatenate
-from keras.layers import Conv1D, MaxPooling1D, LSTM, Bidirectional, GlobalMaxPooling1D
+from keras.layers import Conv1D, MaxPooling1D, LSTM, Bidirectional, GlobalMaxPooling1D, Lambda
 from keras.callbacks import EarlyStopping, CSVLogger # maybe more
 from sklearn.naive_bayes import MultinomialNB
 
@@ -11,7 +11,8 @@ def embedding_layer(corpus, embed_dim, batch_size, inputs):
     return Embedding(input_dim = len(corpus.word_to_id),
                        output_dim = embed_dim,
                        weights = [corpus.init_embedding_matrix],
-                       trainable = True)(inputs)
+                       trainable = True,
+                       name = "embedding")(inputs)
 
 class BiLSTMSoftmax:
     # eventually change name
@@ -66,14 +67,18 @@ class CNN:
         # convolutional layers
         stv_s_ = []
         for i in range(self.seq_length):
-            u_ = x_[:,i,:,:] # selecting utterance at a time
+
+            # selecting utterance at a time
+            u_ = Lambda(lambda x: x[:,i,:,:], name = "Lambda_" + str(i))(x_)
+
             # shape is now [batch_size, utt_length, embed_dim]
             u_ = Conv1D(filters = self.conv_params['filters'],
                         kernel_size = self.conv_params['kernel_size'],
-                        activation='relu')(u_)
+                        activation='relu',
+                        name = 'Conv_' + str(i))(u_)
                         # shape is now [batch_size, (utt_length - kernel_size + 1), filters]
 
-            stv_ = GlobalMaxPooling1D()(u_)
+            stv_ = GlobalMaxPooling1D(name = 'glob_max_pool_' + str(i))(u_)
             # shape is now [batch_size, filters]
 
             # APPLY DROPOUT HERE ???
@@ -84,22 +89,36 @@ class CNN:
         ff_outputs = []
         for f in range(-self.d2-1,0):
             # every FF layer f takes as inputs f-d1, ... f-1, f
-            s_ = stv_s_[f - self.d1: f+1]
-            s_ = Concatenate(axis = -1)(s_)
-            # shape is now [batch, filters * (d1+1)]
-            ff_ = Dense(self.hidden_units, activation='relu')(s_)
-            # shape is now [batch_size, hidden_units]
 
-        # concatenate FF outputs
-        ff_t_ = Concatenate(axis = -1)
+            if self.d1 == 0: # d1 is 0; every FF unit takes one stv as input
+                s_ = stv_s_[f]
+
+            elif self.d1 != 0 and f == -1:
+                # last FF network ... take right d1+1 inputs
+                s_ = stv_s_[f - self.d1:]
+                s_ = Concatenate(axis = -1)(s_)
+            else:
+                s_ = stv_s_[f - self.d1: f+1]
+                s_ = Concatenate(axis = -1)(s_)
+
+            # shape is now [batch, filters * (d1+1)]
+            ff_ = Dense(self.hidden_units, activation='relu', name = 'FF_' + str(f))(s_)
+            # shape is now [batch_size, hidden_units]
+            ff_outputs.append(ff_)
+
+        # concatenate FF outputs (if necessary)
+        if len(ff_outputs) == 1:
+            ff_t_ = ff_outputs[0]
+        else:
+            ff_t_ = Concatenate(axis = -1)(ff_outputs)
         # shape is now [batch_size, (d2+1) * hidden_units]
 
         # ANOTHER DROPOUT??
 
         # output layer
-        predictions = Dense(16, activation='softmax')(ff_t_)
+        predictions_ = Dense(16, activation='softmax', name = 'softmax_output')(ff_t_)
 
-        self.model = Model(inputs = inputs_, outputs=predictions)
+        self.model = Model(inputs = inputs_, outputs=predictions_)
 
     def compile(self):
         self.model.compile(optimizer = 'adagrad', metrics = ['acc'], loss = 'categorical_crossentropy')
