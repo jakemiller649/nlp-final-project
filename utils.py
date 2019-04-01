@@ -157,7 +157,7 @@ class AMI_Corpus:
     """
 
     def __init__(self, filedir = None, seed = None,
-                 max_vocab = 10000, max_utt_length = None,
+                 max_vocab = 10000, max_utt_length = None, max_convo_len = None,
                  embed_vec = None, embed_dim = 100):
         """Load corpus from file"""
 
@@ -167,6 +167,7 @@ class AMI_Corpus:
         self.conversation_lengths = []
         self.max_vocab = max_vocab
         self.max_utt_length = max_utt_length
+        self.max_convo_len = max_convo_len
 
         if filedir is None:
             filedir = os.getcwd() + "\\data"
@@ -371,6 +372,43 @@ class AMI_Corpus:
             self.embed_dim = embed_dim
             self.unfound_words = None
 
+    def pad_clip(convos, max_convo_len, max_utt_length):
+        """Function for padding/clipping conversations (next function explains why this
+        may occur."""
+
+        for c in convos:
+            if c.length == max_len:
+                # just right, good to go
+                continue
+            elif c.length > max_len:
+                # conversation is too long
+                c.utterances = c.utterances[:max_len]
+                c.length = max_len
+            else:
+                # conversation is too short
+                how_short = max_len - c.length
+                for _ in how_short:
+                    dummy_utterance = Utterance(convo_id = c.convo_id)
+                    # <pad> is 0 in our ID table, so we can just use np.zeros
+                    dummy_utterance.word_ids = np.zeros(max_utt_length)
+                    # I might have to fix this part??
+                    dummy_utterance.da_type = None
+                    c.add(dummy_utterance)
+
+
+    def pad_convos(self):
+        """While two of the models I am testing take either one utterance at a time as input, or a short
+        sequence of utterances, Kumar et al 2018 takes whole conversations as inputs. So padding/clipping
+        here as appropriate. (This function is only called within )"""
+
+        if self.max_convo_len is None:
+            c_lens = [c.length for c in self.train_convos]
+            self.max_convo_len = floor(np.percentile(c_lens, 99))
+
+
+
+
+
 class UtteranceGenerator(Sequence):
     """
     Inherits Keras Sequence class to optimize multiprocessing
@@ -435,3 +473,12 @@ class UtteranceGenerator(Sequence):
         """Create a generator that iterate over the Sequence."""
         for item in (self[i] for i in range(len(self))):
             yield item
+
+
+class ConversationGenerator(Sequence):
+    """Generator for doing conversations when in use by Kumar et al"""
+
+    def __init__():
+        pass
+
+    ## GENERATE EACH AS 2D tensor [batch_size, convo_length*utterance*length]
