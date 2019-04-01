@@ -38,16 +38,6 @@ to do:
 - then it becomes -- do I split on conversation, or on sentence (is there a equivalent to clustering??)
 - some sort of export function with accuracy, confusion matrix, hyperparameters, model type (export as json)
 
-- I guess I do a basic version with each utterance as input ... then a fancier version with conversations as inputs?
-
-common elements:
-- embedding layer
-
-so I need the following structure
-- conversation
-  - sentence
-    - word / punctuation / EOS
-
 embeddings
 - this looks like something I should probably know for JL too: https://github.com/RaRe-Technologies/gensim
 - alternative embedding: https://github.com/alexandres/lexvec

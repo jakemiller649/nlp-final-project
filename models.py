@@ -1,11 +1,10 @@
 """description goes here
 
 TO DO:
-- add dropout to CNN
-- parent class?
 - fix CNN so it's just one function
 - default CNN arguments
 - create conversation generator (in utils file)
+- create naive_bayes
 """
 
 import numpy as np
@@ -14,6 +13,7 @@ from keras.layers import Input, Dense, Dropout, Activation, Embedding, Reshape, 
 from keras.layers import Conv1D, MaxPooling1D, LSTM, Bidirectional, GlobalMaxPooling1D, Lambda
 from keras.callbacks import EarlyStopping, CSVLogger # maybe more
 from sklearn.naive_bayes import MultinomialNB
+
 
 def embedding_layer(corpus, embed_dim, batch_size, inputs, trainable):
     return Embedding(input_dim = len(corpus.word_to_id),
@@ -107,42 +107,35 @@ class CNN:
     Longer explanation goes here.
     """
 
-    def __init__(self, corpus, batch_size, conv_params, hidden_units, d1 = 0, d2 = 0, trainable = True):
+    def __init__(self, corpus, batch_size, filters, kernel_size,
+                 hidden_units, dropout_rate = 0, d1 = 0, d2 = 0, trainable_embed = True):
         """
-        do I even need build_model??? cannot I not condense these into one function?
-        what about compile??
+
         """
 
         self.corpus = corpus
-        self.seq_length = d1 + d2 + 1
-        self.batch_size = batch_size
-        self.embed_dim = corpus.embed_dim
-        self.conv_params = conv_params
-        self.hidden_units = hidden_units
-        self.d1 = d1
-        self.d2 = d2
-
-    def build_model(self):
+        seq_length = d1 + d2 + 1
+        embed_dim = corpus.embed_dim
 
         # input shape is [batch_size, seq_length, utterance_length]
-        inputs_ = Input(shape=(self.seq_length, self.corpus.max_utt_length), name="input")
+        inputs_ = Input(shape=(seq_length, self.corpus.max_utt_length), name="input")
 
         # embedding
         x_ = embedding_layer(corpus = self.corpus,
-                             batch_size = self.batch_size, embed_dim = self.embed_dim,
+                             batch_size = batch_size, embed_dim = embed_dim,
                              inputs = inputs_, trainable = trainable_embed)
         # output: [batch_size, seq_length, utt_length, embed_dim]
 
         # convolutional layers
         stv_s_ = []
-        for i in range(self.seq_length):
+        for i in range(seq_length):
 
             # selecting utterance at a time
             u_ = Lambda(lambda x: x[:,i,:,:], name = "Lambda_" + str(i))(x_)
 
             # shape is now [batch_size, utt_length, embed_dim]
-            u_ = Conv1D(filters = self.conv_params['filters'],
-                        kernel_size = self.conv_params['kernel_size'],
+            u_ = Conv1D(filters = filters,
+                        kernel_size = kernel_size,
                         activation='relu',
                         name = 'Conv_' + str(i))(u_)
                         # shape is now [batch_size, (utt_length - kernel_size + 1), filters]
@@ -150,28 +143,28 @@ class CNN:
             stv_ = GlobalMaxPooling1D(name = 'glob_max_pool_' + str(i))(u_)
             # shape is now [batch_size, filters]
 
-            # APPLY DROPOUT HERE ???
-
+            # Lee and Dernoncourt applied dropout here
+            stv_ = Dropout(rate = dropout_rate, name = "dropout")(stv_)
             stv_s_.append(stv_)
 
         # we now construct FF layers for t-d2 ..., t-1, t
         ff_outputs = []
-        for f in range(-self.d2-1,0):
+        for f in range(-d2-1,0):
             # every FF layer f takes as inputs f-d1, ... f-1, f
 
-            if self.d1 == 0: # d1 is 0; every FF unit takes one stv as input
+            if d1 == 0: # d1 is 0; every FF unit takes one stv as input
                 s_ = stv_s_[f]
 
-            elif self.d1 != 0 and f == -1:
+            elif d1 != 0 and f == -1:
                 # last FF network ... take right d1+1 inputs
-                s_ = stv_s_[f - self.d1:]
+                s_ = stv_s_[f - d1:]
                 s_ = Concatenate(axis = -1)(s_)
             else:
-                s_ = stv_s_[f - self.d1: f+1]
+                s_ = stv_s_[f - d1: f+1]
                 s_ = Concatenate(axis = -1)(s_)
 
             # shape is now [batch, filters * (d1+1)]
-            ff_ = Dense(self.hidden_units, activation='relu', name = 'FF_' + str(f))(s_)
+            ff_ = Dense(hidden_units, activation='relu', name = 'FF_' + str(f))(s_)
             # shape is now [batch_size, hidden_units]
             ff_outputs.append(ff_)
 
@@ -182,8 +175,6 @@ class CNN:
             ff_t_ = Concatenate(axis = -1)(ff_outputs)
         # shape is now [batch_size, (d2+1) * hidden_units]
 
-        # ANOTHER DROPOUT?? -- they did not do that
-
         # output layer
         predictions_ = Dense(16, activation='softmax', name = 'softmax_output')(ff_t_)
 
@@ -191,7 +182,6 @@ class CNN:
 
     def compile(self):
         self.model.compile(optimizer = 'adagrad', metrics = ['acc'], loss = 'categorical_crossentropy')
-
 
 
 class BiLSTMCRF:
@@ -211,7 +201,6 @@ class BiLSTMCRF:
         ### call pad convos on corpus
         if corpus.max_convo_len is None:
             corpus.max_convo_len = 50 # literal placeholder
-
 
         # this model only takes whole conversations at a time, so its input shape is
         # [batch_size, convo_length, utterance_length]
@@ -275,5 +264,52 @@ class BiLSTMCRF:
 class NaiveBayes():
     """In order to have a baseline to compare against."""
 
-    def __init__(self, corpus, tfidf = False, **kwargs):
+    def __init__(self, corpus, ngram_range = (1,1), tfidf = False):
+        from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+
+        if tfidf is True:
+            vectorizer = TfidfVectorizer(ngram_range = ngram_range)
+        else:
+            vectorizer = CountVectorizer(ngram_range = ngram_range)
+
+        train_utterances = []
+        for c in corpus.train_convos:
+            for u in c.utterances:
+                train_utterances.append(u)
+
+        test_utterances = []
+        for c in corpus.test_convos:
+            for u in c.utterances:
+                test_utterances.append(u)
+
+        x = [" ".join(u.words) for u in train_utterances if u.da_type is not None]
+        self.y_train = [u.da_type for u in train_utterances if u.da_type is not None]
+
+        # create term-doc matrix for training
+        self.x_train = vectorizer.fit_transform(x)
+
+        # create for test
+        test_words = [" ".join(u.words) for u in test_utterances if u.da_type is not None]
+        self.x_test = vectorizer.transform(test_words)
+        self.y_test = [u.da_type for u in test_utterances if u.da_type is not None]
+
+    def random_search(self, cv = 5, n_iter = 20, param_dist = None):
+        """ """
+        from sklearn.model_selection import RandomizedSearchCV
+        from scipy.stats import uniform
+
+        if param_dist is None:
+            param_dist = {'alpha':uniform(loc = 0, scale = 5)}
+
+        mnb = MultinomialNB()
+        rscv = RandomizedSearchCV(estimator = mnb, param_distributions = param_dist,
+                                  cv = cv, n_iter = n_iter, scoring = 'accuracy',
+                                  return_train_score = False)
+        rscv.fit(self.x_train, self.y_train)
+        return rscv.cv_results_
+
+    def train():
+        pass
+
+    def eval_on_test():
         pass
