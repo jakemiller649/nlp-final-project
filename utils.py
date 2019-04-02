@@ -61,7 +61,7 @@ class Conversation:
         """adfasdf"""
         from contractions import contractions
 
-        with open(filedir + "\\words\\" + self.convo_id + ".words.xml") as infile:
+        with open(filedir + "/words/" + self.convo_id + ".words.xml") as infile:
             # open file, parse xml
             convo_tree = ET.parse(infile)
             convo_root = convo_tree.getroot()
@@ -170,13 +170,13 @@ class AMI_Corpus:
         self.max_convo_len = max_convo_len
 
         if filedir is None:
-            filedir = os.getcwd() + "\\data"
+            filedir = os.getcwd() + "/data"
         print("Loading corpus from", filedir)
 
-        for file in os.listdir(filedir + "\\dialogueActs"):
+        for file in os.listdir(filedir + "/dialogueActs"):
 
             if file.endswith("dialog-act.xml"):
-                with open(filedir + "\\dialogueActs\\" + file) as infile:
+                with open(filedir + "/dialogueActs/" + file) as infile:
                     # open file, parse xml
                     convo_tree = ET.parse(infile)
                     convo_root = convo_tree.getroot()
@@ -443,22 +443,25 @@ class UtteranceGenerator(Sequence):
 
         if self.sequence_length == 1:
             batch_x = np.array([u.word_ids for u in self.combined_utterances[start:end]])
-            batch_y = np.array([u.da_type for u in self.combined_utterances[start:end]])
         else:
             sub_batches_x = []
-            sub_batches_y = []
             for idx in range(start,end):
                 sub_batch_x = [u.word_ids for u in self.combined_utterances[(idx - self.sequence_length + 1):idx+1]]
-                sub_batch_y = [u.da_type for u in self.combined_utterances[(idx - self.sequence_length + 1):idx+1]]
                 sub_batches_x.append(sub_batch_x)
-                sub_batches_y.append(sub_batch_y)
 
             batch_x = np.array(sub_batches_x)
-            batch_y = np.array(sub_batches_y)
             # batch x shape is [batch_size, sequence_length, utterance_length]
-            # batch y shape is [batch_size, sequence_length]
 
-        return batch_x, batch_y
+        batch_y = np.array([u.da_type for u in self.combined_utterances[start:end]])
+        # batch_y shape is currently [batch,]
+        
+        # convert batch_y to one-hot
+        batch_y_oh = np.zeros((self.batch_size, 17))
+        batch_y_oh[np.arange(self.batch_size), batch_y] = 1
+        
+        # batch_y_oh is [batch_size, 17]
+        
+        return batch_x, batch_y_oh
 
     def __len__(self):
         """Number of batch in the Sequence.

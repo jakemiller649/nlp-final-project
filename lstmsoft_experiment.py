@@ -26,7 +26,7 @@ import json
 
 def run_model():
 
-    BATCH_SIZE = 25
+    BATCH_SIZE = 100
     EPOCHS = 50
 
     # choose hyperparameters
@@ -46,7 +46,7 @@ def run_model():
                               num_layers = num_layers,
                               dropout_rate = dropout_rate,
                               hidden_state_size = hidden_state_size,
-                              stateful = False, bidirectional = False, trainable_embed = False):
+                              stateful = False, bidirectional = False, trainable_embed = False)
 
     lstm.model.compile(optimizer = 'adagrad', metrics = ['acc'], loss = 'categorical_crossentropy')
 
@@ -61,8 +61,8 @@ def run_model():
     csv_logger = CSVLogger('logs/lstm_history_' + right_now) # log epochs in case I want to look back later
 
     # note to self, maybe change validation_steps and validation_freq
-    history = model.fit_generator(ug_train, epochs=EPOCHS, verbose=1, callbacks=[es, csv_logger],
-                      validation_data=ug_val, validation_steps=100, validation_freq=1,
+    history = lstm.model.fit_generator(ug_train, epochs=EPOCHS, verbose=1, callbacks=[es, csv_logger],
+                      validation_data=ug_val,  #validation_freq=1,
                       use_multiprocessing=True, shuffle=True)
 
     results = {"num_layers":num_layers, "hidden_state_size":hidden_state_size,"dropout_rate":dropout_rate,
@@ -74,5 +74,5 @@ def run_model():
 
 if __name__ == "__main__":
     experiment_start = time()
-    while time() - experiment_start < 3600: # start with an hour, see how it does
+    while time() - experiment_start < 7200: # start with an hour, see how it does
         run_model()

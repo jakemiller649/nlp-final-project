@@ -26,7 +26,7 @@ import json
 
 def run_model():
 
-    BATCH_SIZE = 25
+    BATCH_SIZE = 100
     EPOCHS = 50
 
     # choose hyperparameters
@@ -45,6 +45,7 @@ def run_model():
     corpus = utils.AMI_Corpus(seed = 75, embed_vec = embed_vec)
 
     cnn = models.CNN(corpus = corpus,
+                     d1 = d1, d2 = d2,
                        batch_size = BATCH_SIZE,
                        filters = filters,
                        kernel_size = kernel_size,
@@ -64,9 +65,9 @@ def run_model():
     csv_logger = CSVLogger('logs/cnn_history_' + right_now) # log epochs in case I want to look back later
 
     # note to self, maybe change validation_steps and validation_freq
-    history = model.fit_generator(ug_train, epochs=EPOCHS, verbose=1, callbacks=[es, csv_logger],
-                      validation_data=ug_val, validation_steps=100, validation_freq=1,
-                      use_multiprocessing=True, shuffle=True)
+    history = cnn.model.fit_generator(ug_train, epochs=EPOCHS, verbose=1, callbacks=[es, csv_logger],
+                                      validation_data=ug_val, #validation_freq=1,
+                                      use_multiprocessing=True, shuffle=True)
 
     results = {"d1":d1, "d2":d2, "filters":filters, "kernel_size":kernel_size, "hidden_units":hidden_units, "dropout_rate":dropout_rate,
                "embed_vec":embed_vec, "acc":history.history['acc'][-5:], "val_acc":history.history['acc'][-5:],
@@ -77,5 +78,5 @@ def run_model():
 
 if __name__ == "__main__":
     experiment_start = time()
-    while time() - experiment_start < 3600: # start with an hour, see how it does
+    while time() - experiment_start < 7200: # start with two hours, see how it does
         run_model()

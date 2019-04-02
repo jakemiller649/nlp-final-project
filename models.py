@@ -82,7 +82,7 @@ class LSTMSoftmax:
         # shape is now [batch_size, hidden_state_size]
 
         # output layer
-        predictions_ = Dense(16, activation='softmax', name = 'softmax_output')(lstm_out_)
+        predictions_ = Dense(17, activation='softmax', name = 'softmax_output')(lstm_out_)
 
         self.model = Model(inputs = inputs_, outputs=predictions_)
 
@@ -140,7 +140,7 @@ class CNN:
             # shape is now [batch_size, filters]
 
             # Lee and Dernoncourt applied dropout here
-            stv_ = Dropout(rate = dropout_rate, name = "dropout")(stv_)
+            stv_ = Dropout(rate = dropout_rate, name = "dropout_" + str(i))(stv_)
             stv_s_.append(stv_)
 
         # we now construct FF layers for t-d2 ..., t-1, t
@@ -172,7 +172,7 @@ class CNN:
         # shape is now [batch_size, (d2+1) * hidden_units]
 
         # output layer
-        predictions_ = Dense(16, activation='softmax', name = 'softmax_output')(ff_t_)
+        predictions_ = Dense(17, activation='softmax', name = 'softmax_output')(ff_t_)
 
         self.model = Model(inputs = inputs_, outputs=predictions_)
 
@@ -246,7 +246,7 @@ class BiLSTMCRF:
 
         ### LINEAR CHAIN CRF OUTPUT LAYER ##
 
-        predictions_ = CRF(16)(c_out_)
+        predictions_ = CRF(17)(c_out_)
 
         self.model = Model(inputs = inputs_, outputs = predictions_)
 
