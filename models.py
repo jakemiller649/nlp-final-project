@@ -1,6 +1,9 @@
 """description goes here
 
 TO DO:
+ #### COME UP WITH DEV GENERATOR #####
+
+
 - fix CNN so it's just one function
 - default CNN arguments
 - create conversation generator (in utils file)
@@ -11,7 +14,6 @@ import numpy as np
 from keras.models import Model
 from keras.layers import Input, Dense, Dropout, Activation, Embedding, Reshape, Concatenate
 from keras.layers import Conv1D, MaxPooling1D, LSTM, Bidirectional, GlobalMaxPooling1D, Lambda
-from keras.callbacks import EarlyStopping, CSVLogger # maybe more
 from sklearn.naive_bayes import MultinomialNB
 
 
@@ -52,7 +54,7 @@ class LSTMSoftmax:
 
     def __init__(self, corpus, batch_size = 25, num_layers = 2,
                 dropout_rate = 0.5, hidden_state_size = 100, stateful = False,
-                bidirectional = False, trainable_embed = True):
+                bidirectional = False, trainable_embed = False):
         """
 
         Note to self, it does not sound like they passed states between batches, but why can't I try?
@@ -108,7 +110,7 @@ class CNN:
     """
 
     def __init__(self, corpus, batch_size, filters, kernel_size,
-                 hidden_units, dropout_rate = 0, d1 = 0, d2 = 0, trainable_embed = True):
+                 hidden_units, dropout_rate = 0, d1 = 0, d2 = 0, trainable_embed = False):
         """
 
         """

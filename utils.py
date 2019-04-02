@@ -321,7 +321,8 @@ class AMI_Corpus:
 
         docstring
         Args:
-          - embed_vec -- one of None (default), 'glove100', 'glove200', 'glove300', 'numberbatch', or 'lexvec'
+          - embed_vec -- one of None (default),
+            'glove100', 'glove200', 'glove300', 'numberbatch', or 'lexvec'
         """
 
         print("Building initial embedding matrix ...")
