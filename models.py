@@ -1,13 +1,7 @@
 """description goes here
 
 TO DO:
- #### COME UP WITH DEV GENERATOR #####
 
-
-- fix CNN so it's just one function
-- default CNN arguments
-- create conversation generator (in utils file)
-- create naive_bayes
 """
 
 import numpy as np
@@ -194,19 +188,20 @@ class BiLSTMCRF:
        as inputs.
        """
 
-    def __init__(self, corpus, batch_size = 25, dropout_rate = 0.0, bidirectional = True, num_layers = 1,
+    def __init__(self, corpus, batch_size = 25, sequence_length = 50, dropout_rate = 0.0, bidirectional = True, num_layers = 1,
                  hidden_state_size = 100, stateful = False, trainable_embed = False):
 
         from keras_contrib.layers import CRF
 
 
         ### call pad convos on corpus
-        if corpus.max_convo_len is None:
-            corpus.max_convo_len = 50 # literal placeholder
+        ## DELETE
+        #if corpus.max_convo_len is None:
+            #corpus.max_convo_len = 50 # literal placeholder
 
         # this model only takes whole conversations at a time, so its input shape is
         # [batch_size, convo_length, utterance_length]
-        inputs_ = Input(shape = (corpus.max_convo_len, corpus.max_utt_length), name = "input")
+        inputs_ = Input(shape = (sequence_length, corpus.max_utt_length), name = "input")
 
         # embedding layer
         embed_dim = corpus.embed_dim
@@ -222,7 +217,7 @@ class BiLSTMCRF:
         encoded_utterances = []
 
         # Each utterance gets its own encoder that consists of LSTM and pooling
-        for i in range(corpus.max_convo_len):
+        for i in range(sequence_length):
             # selecting utterance at a time
             u_ = Lambda(lambda x: x[:,i,:,:], name = "Extraction_" + str(i))(x_)
 
@@ -242,7 +237,7 @@ class BiLSTMCRF:
         #### CONVERSATION-LEVEL ENCODER ###
         conv_ = Concatenate(axis = 1)(encoded_utterances)
         # shape is now [batch_size, convo_len*hidden_state_size]
-        conv_ = Reshape((corpus.max_convo_len, -1))(conv_)
+        conv_ = Reshape((sequence_length, -1))(conv_)
         # shape is now [batch_size, convo_len, hidden_state_size]
 
         c_out_ = layered_LSTM(x_ = conv_, num_layers = num_layers,

@@ -255,11 +255,13 @@ class AMI_Corpus:
         if split_seed is not None:
             seed(split_seed)
 
-        split_point = floor(len(self.conversations)*0.8)
-        shuffle(self.conversations)
-        self.train_convos = self.conversations[:split_point]
+        split_point_1 = floor(len(self.conversations)*0.7)
+        split_point_2 = floor(len(self.conversations)*0.8)
 
-        self.test_convos = self.conversations[split_point:]
+        shuffle(self.conversations)
+        self.train_convos = self.conversations[:split_point_1]
+        self.val_convos = self.conversations[split_point_1:split_point_2]
+        self.test_convos = self.conversations[split_point_2:]
 
     def create_vocab(self):
         """doc
@@ -290,30 +292,22 @@ class AMI_Corpus:
         if self.max_utt_length is None:
             self.max_utt_length = floor(np.percentile(self.utterance_lengths, 99))
 
+        def pad(convos):
+            for convo in convos:
+                for u in convo.utterances:
+                    # 1 maps to <unk>
+                    ids = [self.word_to_id.get(i, 1) for i in u.words]
+                    if len(ids) >= self.max_utt_length:
+                        # clip
+                        u.word_ids = np.array(ids[:self.max_utt_length])
+                    else:
+                        # pad
+                        ids = ids + (self.max_utt_length - len(ids))*[0]
+                        u.word_ids = np.array(ids)
 
-        for convo in self.train_convos:
-            for u in convo.utterances:
-                # 1 maps to <unk>
-                ids = [self.word_to_id.get(i, 1) for i in u.words]
-                if len(ids) >= self.max_utt_length:
-                    # clip
-                    u.word_ids = np.array(ids[:self.max_utt_length])
-                else:
-                    # pad
-                    ids = ids + (self.max_utt_length - len(ids))*[0]
-                    u.word_ids = np.array(ids)
-
-        for convo in self.test_convos:
-            for u in convo.utterances:
-                # 1 maps to <unk>
-                ids = [self.word_to_id.get(i, 1) for i in u.words]
-                if len(ids) >= self.max_utt_length:
-                    # clip
-                    u.word_ids = np.array(ids[:self.max_utt_length])
-                else:
-                    # pad
-                    ids = ids + (self.max_utt_length - len(ids))*[0]
-                    u.word_ids = np.array(ids)
+        pad(self.train_convos)
+        pad(self.val_convos)
+        pad(self.test_convos)
 
     def create_embed_matrix(self, embed_vec, embed_dim):
         """
@@ -373,7 +367,7 @@ class AMI_Corpus:
             self.embed_dim = embed_dim
             self.unfound_words = None
 
-    def pad_clip(convos, max_convo_len, max_utt_length):
+    def pad_clip(convos, max_convo_len):
         """Function for padding/clipping conversations (next function explains why this
         may occur."""
 
@@ -404,10 +398,7 @@ class AMI_Corpus:
 
         if self.max_convo_len is None:
             c_lens = [c.length for c in self.train_convos]
-            self.max_convo_len = floor(np.percentile(c_lens, 99))
-
-
-
+            self.max_convo_len = floor(np.percentile(c_lens, 95))
 
 
 class UtteranceGenerator(Sequence):
@@ -426,10 +417,12 @@ class UtteranceGenerator(Sequence):
 
         if mode == "train":
             convos = corpus.train_convos
-        elif mode == "evaluate":
+        elif mode == "val":
+            convos = corpus.val_convos
+        elif mode == "test":
             convos = corpus.test_convos
         else:
-            raise Exception("Generator's mode must be either 'train' or 'evaluate'")
+            raise Exception("Generator's mode must be either 'train,' 'val,' or 'test'")
 
         # create universal indexing for utterances
         self.combined_utterances = []
@@ -449,17 +442,20 @@ class UtteranceGenerator(Sequence):
 
         if self.sequence_length == 1:
             batch_x = np.array([u.word_ids for u in self.combined_utterances[start:end]])
+            batch_y = np.array([u.da_type for u in self.combined_utterances[start:end]])
         else:
-            sub_batches = []
+            sub_batches_x = []
+            sub_batches_y = []
             for idx in range(start,end):
-                sub_batch = [u.word_ids for u in self.combined_utterances[(idx - self.sequence_length + 1):idx+1]]
-                sub_batches.append(sub_batch)
+                sub_batch_x = [u.word_ids for u in self.combined_utterances[(idx - self.sequence_length + 1):idx+1]]
+                sub_batch_y = [u.da_type for u in self.combined_utterances[(idx - self.sequence_length + 1):idx+1]]
+                sub_batches_x.append(sub_batch_x)
+                sub_batches_y.append(sub_batch_y)
 
-            batch_x = np.array(sub_batches)
-            # shape is [batch_size, sequence_length, utterance_length]
-
-
-        batch_y = np.array([u.da_type for u in self.combined_utterances[start:end]])
+            batch_x = np.array(sub_batches_x)
+            batch_y = np.array(sub_batches_y)
+            # batch x shape is [batch_size, sequence_length, utterance_length]
+            # batch y shape is [batch_size, sequence_length]
 
         return batch_x, batch_y
 
@@ -472,14 +468,6 @@ class UtteranceGenerator(Sequence):
 
     def __iter__(self):
         """Create a generator that iterate over the Sequence."""
-        for item in (self[i] for i in range(len(self))):
+        for item in (self[i] for i in range(self.sequence_length - 1, len(self))):
+            # so if sequence length is 1, you start at idx 0. if it's 5 you start at idx 4
             yield item
-
-
-class ConversationGenerator(Sequence):
-    """Generator for doing conversations when in use by Kumar et al"""
-
-    def __init__():
-        pass
-
-    ## GENERATE EACH AS 2D tensor [batch_size, convo_length*utterance*length]
