@@ -52,7 +52,7 @@ class LSTMSoftmax:
         """
 
         Note to self, it does not sound like they passed states between batches, but why can't I try?
-        Also they did not do bidirectional either (I will try as well)
+        Also they did not do bidirectional either (I will try as well??)
         """
 
         # this model only takes one utterance at a time, so its input shape is

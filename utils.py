@@ -196,7 +196,8 @@ class AMI_Corpus:
                         utterance.da_type = int(re.findall(r'[0-9]{1,2}', leaf[0].attrib['href'])[-1])
                         b = 1
                     else:
-                        # leave da_type as "None"
+                        # leave da_type as 0
+                        utterance.da_type = 0
                         b = 0
                     # note start and end points
                     if ".." in leaf[b].attrib['href']:

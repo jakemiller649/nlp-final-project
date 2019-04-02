@@ -30,11 +30,8 @@ def run_model():
     EPOCHS = 50
 
     # choose hyperparameters
-    d1 = np.random.randint(0,3)
-    d2 = np.random.randint(0,3)
-    filters = np.random.randint(50,1001)
-    kernel_size = np.random.randint(1,11)
-    hidden_units = np.random.randint(25,251)
+    num_layers = np.random.randint(2,16) # lstm layers
+    hidden_state_size = np.random.randint(100,400)
     dropout_rate = round(np.random.uniform(0,1,size=None), 3)
     embed_vec = np.random.choice(['glove100', 'glove200', 'glove300', 'numberbatch', 'lexvec'])
 
@@ -44,35 +41,35 @@ def run_model():
     # load the corpus
     corpus = utils.AMI_Corpus(seed = 75, embed_vec = embed_vec)
 
-    cnn = models.CNN(corpus = corpus,
-                       batch_size = BATCH_SIZE,
-                       filters = filters,
-                       kernel_size = kernel_size,
-                       hidden_units = hidden_units,
-                       dropout_rate = dropout_rate)
+    lstm = models.LSTMSoftmax(corpus,
+                              batch_size = BATCH_SIZE,
+                              num_layers = num_layers,
+                              dropout_rate = dropout_rate,
+                              hidden_state_size = hidden_state_size,
+                              stateful = False, bidirectional = False, trainable_embed = False):
 
-    cnn.model.compile(optimizer = 'adagrad', metrics = ['acc'], loss = 'categorical_crossentropy')
+    lstm.model.compile(optimizer = 'adagrad', metrics = ['acc'], loss = 'categorical_crossentropy')
 
     # create our generators
-    ug_train = utils.UtteranceGenerator(corpus, "train", batch_size = BATCH_SIZE, sequence_length = (d1 + d2 + 1))
-    ug_val = utils.UtteranceGenerator(corpus, "val", batch_size = BATCH_SIZE, sequence_length = (d1 + d2 + 1))
+    ug_train = utils.UtteranceGenerator(corpus, "train", batch_size = BATCH_SIZE)
+    ug_val = utils.UtteranceGenerator(corpus, "val", batch_size = BATCH_SIZE)
 
     # create keras callbacks
     es = EarlyStopping(monitor='val_loss', patience=5, verbose=0)
 
     right_now = datetime.now().isoformat() # timestamp
-    csv_logger = CSVLogger('logs/cnn_history_' + right_now) # log epochs in case I want to look back later
+    csv_logger = CSVLogger('logs/lstm_history_' + right_now) # log epochs in case I want to look back later
 
     # note to self, maybe change validation_steps and validation_freq
     history = model.fit_generator(ug_train, epochs=EPOCHS, verbose=1, callbacks=[es, csv_logger],
                       validation_data=ug_val, validation_steps=100, validation_freq=1,
                       use_multiprocessing=True, shuffle=True)
 
-    results = {"d1":d1, "d2":d2, "filters":filters, "kernel_size":kernel_size, "hidden_units":hidden_units, "dropout_rate":dropout_rate,
+    results = {"num_layers":num_layers, "hidden_state_size":hidden_state_size,"dropout_rate":dropout_rate,
                "embed_vec":embed_vec, "acc":history.history['acc'][-5:], "val_acc":history.history['acc'][-5:],
                "loss":history.history['loss'][-5:], "val_loss":history.history['val_loss'][-5:], time:time() - start}
 
-    with open("logs/cnn_params_" + right_now + ".json", "w") as f:
+    with open("logs/lstm_params_" + right_now + ".json", "w") as f:
         json.dump(results, f)
 
 if __name__ == "__main__":
