@@ -1,0 +1,109 @@
+2019-04-03 14:52:21.514563: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 FMA
+2019-04-03 14:52:21.614713: I tensorflow/core/common_runtime/process_util.cc:69] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+Loading corpus from /home/jake_miller/final/nlp-final-project/data
+Begin corpus post-processing ...
+Splitting corpus into training and test ...
+Creating vocabulary from training set ...
+Found 8379 unique words.
+Building initial embedding matrix ...
+(8381, 200)
+loading pretrained vectors from glove.6B.200d.txt
+Epoch 1/50
+/home/jake_miller/anaconda3/lib/python3.6/site-packages/h5py/__init__.py:36: FutureWarning: Conversion of the second argument of issubdtype from `float` to `np.floating` is deprecated. In future, it will be treated as `np.float64 == np.dtype(float).type`.
+  from ._conv import register_converters as _register_converters
+Using TensorFlow backend.
+
+  1/633 [..............................] - ETA: 39:56 - loss: 3.5184 - acc: 0.0469
+  2/633 [..............................] - ETA: 22:39 - loss: 6.8542 - acc: 0.0859
+  3/633 [..............................] - ETA: 16:52 - loss: 8.5570 - acc: 0.1432
+  4/633 [..............................] - ETA: 13:58 - loss: 9.8177 - acc: 0.1465
+  5/633 [..............................] - ETA: 12:14 - loss: 10.3726 - acc: 0.1609
+  6/633 [..............................] - ETA: 11:06 - loss: 10.9524 - acc: 0.1576
+  7/633 [..............................] - ETA: 10:17 - loss: 11.2946 - acc: 0.1596
+  8/633 [..............................] - ETA: 9:40 - loss: 11.5040 - acc: 0.1641 
+  9/633 [..............................] - ETA: 9:11 - loss: 11.5270 - acc: 0.1762
+ 10/633 [..............................] - ETA: 8:47 - loss: 11.5454 - acc: 0.1859
+ 11/633 [..............................] - ETA: 8:27 - loss: 11.6863 - acc: 0.1861
+ 12/633 [..............................] - ETA: 8:10 - loss: 11.7933 - acc: 0.1868
+ 13/633 [..............................] - ETA: 7:54 - loss: 11.8838 - acc: 0.1875
+ 14/633 [..............................] - ETA: 7:38 - loss: 11.8265 - acc: 0.1964
+ 15/633 [..............................] - ETA: 7:24 - loss: 12.0035 - acc: 0.1901
+ 16/633 [..............................] - ETA: 7:12 - loss: 11.8907 - acc: 0.2012
+ 17/633 [..............................] - ETA: 7:01 - loss: 11.9246 - acc: 0.2027
+ 18/633 [..............................] - ETA: 6:51 - loss: 11.8498 - acc: 0.2105
+ 19/633 [..............................] - ETA: 6:43 - loss: 11.8159 - acc: 0.2155
+ 20/633 [..............................] - ETA: 6:36 - loss: 11.7666 - acc: 0.2211
+ 21/633 [..............................] - ETA: 6:31 - loss: 11.7640 - acc: 0.2236
+ 22/633 [>.............................] - ETA: 6:26 - loss: 11.7558 - acc: 0.2262
+ 23/633 [>.............................] - ETA: 6:21 - loss: 11.6772 - acc: 0.2330
+ 24/633 [>.............................] - ETA: 6:17 - loss: 11.6104 - acc: 0.2389
+ 25/633 [>.............................] - ETA: 6:13 - loss: 11.4633 - acc: 0.2497
+ 26/633 [>.............................] - ETA: 6:10 - loss: 11.4970 - acc: 0.2491
+ 27/633 [>.............................] - ETA: 6:05 - loss: 11.5982 - acc: 0.2442
+ 28/633 [>.............................] - ETA: 6:01 - loss: 11.6427 - acc: 0.2427
+ 29/633 [>.............................] - ETA: 5:56 - loss: 11.5626 - acc: 0.2489
+ 30/633 [>.............................] - ETA: 5:52 - loss: 11.5633 - acc: 0.2500
+ 31/633 [>.............................] - ETA: 5:49 - loss: 11.5721 - acc: 0.2505
+ 32/633 [>.............................] - ETA: 5:47 - loss: 11.6512 - acc: 0.2466
+ 33/633 [>.............................] - ETA: 5:45 - loss: 11.6759 - acc: 0.2460
+ 34/633 [>.............................] - ETA: 5:43 - loss: 11.7177 - acc: 0.2443
+ 35/633 [>.............................] - ETA: 5:41 - loss: 11.7679 - acc: 0.2420
+ 36/633 [>.............................] - ETA: 5:39 - loss: 11.7663 - acc: 0.2428
+ 37/633 [>.............................] - ETA: 5:37 - loss: 11.6967 - acc: 0.2479
+ 38/633 [>.............................] - ETA: 5:35 - loss: 11.7137 - acc: 0.2475
+ 39/633 [>.............................] - ETA: 5:33 - loss: 11.6393 - acc: 0.2528
+ 40/633 [>.............................] - ETA: 5:31 - loss: 11.6380 - acc: 0.2535
+ 41/633 [>.............................] - ETA: 5:30 - loss: 11.6520 - acc: 0.2532
+ 42/633 [>.............................] - ETA: 5:28 - loss: 11.6654 - acc: 0.2530
+ 43/633 [=>............................] - ETA: 5:26 - loss: 11.6343 - acc: 0.2555
+ 44/633 [=>............................] - ETA: 5:24 - loss: 11.6961 - acc: 0.2521
+ 45/633 [=>............................] - ETA: 5:22 - loss: 11.6461 - acc: 0.2557
+ 46/633 [=>............................] - ETA: 5:19 - loss: 11.6748 - acc: 0.2544
+ 47/633 [=>............................] - ETA: 5:18 - loss: 11.7104 - acc: 0.2527
+ 48/633 [=>............................] - ETA: 5:17 - loss: 11.7341 - acc: 0.2516
+ 49/633 [=>............................] - ETA: 5:15 - loss: 11.7670 - acc: 0.2500
+ 50/633 [=>............................] - ETA: 5:14 - loss: 11.7256 - acc: 0.2530
+ 51/633 [=>............................] - ETA: 5:13 - loss: 11.7055 - acc: 0.2546
+ 52/633 [=>............................] - ETA: 5:11 - loss: 11.6669 - acc: 0.2574
+ 53/633 [=>............................] - ETA: 5:10 - loss: 11.7152 - acc: 0.2547
+ 54/633 [=>............................] - ETA: 5:08 - loss: 11.7058 - acc: 0.2556
+ 55/633 [=>............................] - ETA: 5:07 - loss: 11.6693 - acc: 0.2582
+ 56/633 [=>............................] - ETA: 5:06 - loss: 11.6835 - acc: 0.2577
+ 57/633 [=>............................] - ETA: 5:05 - loss: 11.7039 - acc: 0.2567
+ 58/633 [=>............................] - ETA: 5:04 - loss: 11.7474 - acc: 0.2543
+ 59/633 [=>............................] - ETA: 5:03 - loss: 11.7959 - acc: 0.2516
+ 60/633 [=>............................] - ETA: 5:02 - loss: 11.8176 - acc: 0.2505
+ 61/633 [=>............................] - ETA: 5:01 - loss: 11.7477 - acc: 0.2551multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/home/jake_miller/anaconda3/lib/python3.6/multiprocessing/pool.py", line 119, in worker
+    result = (True, func(*args, **kwds))
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/keras/utils/data_utils.py", line 401, in get_index
+    return _SHARED_SEQUENCES[uid][i]
+  File "/home/jake_miller/final/nlp-final-project/utils.py", line 460, in __getitem__
+    batch_y_oh[np.arange(self.batch_size), batch_y] = 1
+IndexError: shape mismatch: indexing arrays could not be broadcast together with shapes (128,) (65,) 
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "cnn_experiment.py", line 82, in <module>
+    run_model()
+  File "cnn_experiment.py", line 70, in run_model
+    use_multiprocessing=True, shuffle=True)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/keras/legacy/interfaces.py", line 91, in wrapper
+    return func(*args, **kwargs)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/keras/engine/training.py", line 1418, in fit_generator
+    initial_epoch=initial_epoch)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/keras/engine/training_generator.py", line 181, in fit_generator
+    generator_output = next(output_generator)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/keras/utils/data_utils.py", line 601, in get
+    six.reraise(*sys.exc_info())
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/six.py", line 693, in reraise
+    raise value
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/keras/utils/data_utils.py", line 595, in get
+    inputs = self.queue.get(block=True).get()
+  File "/home/jake_miller/anaconda3/lib/python3.6/multiprocessing/pool.py", line 644, in get
+    raise self._value
+IndexError: shape mismatch: indexing arrays could not be broadcast together with shapes (128,) (65,) 
