@@ -6,7 +6,7 @@ TO DO:
 
 import numpy as np
 from keras.models import Model
-from keras.layers import Input, Dense, Dropout, Activation, Embedding, Reshape, Concatenate
+from keras.layers import Input, Dense, Dropout, Activation, Embedding, Reshape, Concatenate, CuDNNLSTM
 from keras.layers import Conv1D, MaxPooling1D, LSTM, Bidirectional, GlobalMaxPooling1D, Lambda
 from sklearn.naive_bayes import MultinomialNB
 
@@ -29,13 +29,13 @@ def layered_LSTM(x_, num_layers, hidden_state_size, stateful, bidirectional = Fa
             h_in_ = h_out_
 
         if bidirectional == False:
-            h_out_ = LSTM(units = hidden_state_size,
-                          return_sequences = True, stateful = stateful,
-                          name = "lstm_" + suffix + str(i))(h_in_)
+            h_out_ = CuDNNLSTM(units = hidden_state_size,
+                               return_sequences = True, stateful = stateful,
+                               name = "lstm_" + suffix + str(i))(h_in_)
         elif bidirectional == True:
-            h_out_ = Bidirectional(LSTM(units = hidden_state_size,
-                                        return_sequences = True, stateful = stateful,
-                                        name = "bilstm_" + str(i)),
+            h_out_ = Bidirectional(CuDNNLSTM(units = hidden_state_size,
+                                             return_sequences = True, stateful = stateful,
+                                             name = "bilstm_" + str(i)),
                                    merge_mode = 'concat')(h_in_)
 
     return h_out_
