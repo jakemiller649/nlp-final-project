@@ -107,3 +107,98 @@ Traceback (most recent call last):
   File "/home/jake_miller/anaconda3/lib/python3.6/multiprocessing/pool.py", line 644, in get
     raise self._value
 IndexError: shape mismatch: indexing arrays could not be broadcast together with shapes (128,) (65,) 
+2019-04-03 14:53:26.769855: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 FMA
+2019-04-03 14:53:26.771384: I tensorflow/core/common_runtime/process_util.cc:69] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+Loading corpus from /home/jake_miller/final/nlp-final-project/data
+Begin corpus post-processing ...
+Splitting corpus into training and test ...
+Creating vocabulary from training set ...
+Found 8379 unique words.
+Building initial embedding matrix ...
+(8381, 300)
+loading pretrained vectors from glove.6B.300d.txt
+/home/jake_miller/anaconda3/lib/python3.6/site-packages/h5py/__init__.py:36: FutureWarning: Conversion of the second argument of issubdtype from `float` to `np.floating` is deprecated. In future, it will be treated as `np.float64 == np.dtype(float).type`.
+  from ._conv import register_converters as _register_converters
+Using TensorFlow backend.
+Epoch 1/50
+Traceback (most recent call last):
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py", line 1322, in _do_call
+    return fn(*args)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py", line 1305, in _run_fn
+    self._extend_graph()
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py", line 1340, in _extend_graph
+    tf_session.ExtendSession(self._session)
+tensorflow.python.framework.errors_impl.InvalidArgumentError: No OpKernel was registered to support Op 'CudnnRNN' with these attrs.  Registered devices: [CPU], Registered kernels:
+  <no registered kernels>
+
+	 [[Node: lstm_0/CudnnRNN = CudnnRNN[T=DT_FLOAT, direction="unidirectional", dropout=0, input_mode="linear_input", is_training=true, rnn_mode="lstm", seed=87654321, seed2=0](lstm_0/transpose, lstm_0/ExpandDims_1, lstm_0/ExpandDims_2, lstm_0/concat_1)]]
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "lstmsoft_experiment.py", line 78, in <module>
+    run_model()
+  File "lstmsoft_experiment.py", line 66, in run_model
+    use_multiprocessing=True, shuffle=True)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/keras/legacy/interfaces.py", line 91, in wrapper
+    return func(*args, **kwargs)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/keras/engine/training.py", line 1418, in fit_generator
+    initial_epoch=initial_epoch)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/keras/engine/training_generator.py", line 217, in fit_generator
+    class_weight=class_weight)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/keras/engine/training.py", line 1217, in train_on_batch
+    outputs = self.train_function(ins)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py", line 2697, in __call__
+    if hasattr(get_session(), '_make_callable_from_options'):
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py", line 199, in get_session
+    [tf.is_variable_initialized(v) for v in candidate_vars])
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py", line 900, in run
+    run_metadata_ptr)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py", line 1135, in _run
+    feed_dict_tensor, options, run_metadata)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py", line 1316, in _do_run
+    run_metadata)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/tensorflow/python/client/session.py", line 1335, in _do_call
+    raise type(e)(node_def, op, message)
+tensorflow.python.framework.errors_impl.InvalidArgumentError: No OpKernel was registered to support Op 'CudnnRNN' with these attrs.  Registered devices: [CPU], Registered kernels:
+  <no registered kernels>
+
+	 [[Node: lstm_0/CudnnRNN = CudnnRNN[T=DT_FLOAT, direction="unidirectional", dropout=0, input_mode="linear_input", is_training=true, rnn_mode="lstm", seed=87654321, seed2=0](lstm_0/transpose, lstm_0/ExpandDims_1, lstm_0/ExpandDims_2, lstm_0/concat_1)]]
+
+Caused by op 'lstm_0/CudnnRNN', defined at:
+  File "lstmsoft_experiment.py", line 78, in <module>
+    run_model()
+  File "lstmsoft_experiment.py", line 49, in run_model
+    stateful = False, bidirectional = False, trainable_embed = False)
+  File "/home/jake_miller/final/nlp-final-project/models.py", line 75, in __init__
+    bidirectional = bidirectional)
+  File "/home/jake_miller/final/nlp-final-project/models.py", line 34, in layered_LSTM
+    name = "lstm_" + suffix + str(i))(h_in_)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/keras/layers/recurrent.py", line 532, in __call__
+    return super(RNN, self).__call__(inputs, **kwargs)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/keras/engine/base_layer.py", line 457, in __call__
+    output = self.call(inputs, **kwargs)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/keras/layers/cudnn_recurrent.py", line 90, in call
+    output, states = self._process_batch(inputs, initial_state)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/keras/layers/cudnn_recurrent.py", line 517, in _process_batch
+    is_training=True)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/tensorflow/contrib/cudnn_rnn/python/ops/cudnn_rnn_ops.py", line 1544, in __call__
+    input_data, input_h, input_c, params, is_training=is_training)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/tensorflow/contrib/cudnn_rnn/python/ops/cudnn_rnn_ops.py", line 1435, in __call__
+    seed=self._seed)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/tensorflow/contrib/cudnn_rnn/python/ops/cudnn_rnn_ops.py", line 922, in _cudnn_rnn
+    outputs, output_h, output_c, _ = gen_cudnn_rnn_ops.cudnn_rnn(**args)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/tensorflow/python/ops/gen_cudnn_rnn_ops.py", line 115, in cudnn_rnn
+    is_training=is_training, name=name)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/tensorflow/python/framework/op_def_library.py", line 787, in _apply_op_helper
+    op_def=op_def)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/tensorflow/python/framework/ops.py", line 3414, in create_op
+    op_def=op_def)
+  File "/home/jake_miller/anaconda3/lib/python3.6/site-packages/tensorflow/python/framework/ops.py", line 1740, in __init__
+    self._traceback = self._graph._extract_stack()  # pylint: disable=protected-access
+
+InvalidArgumentError (see above for traceback): No OpKernel was registered to support Op 'CudnnRNN' with these attrs.  Registered devices: [CPU], Registered kernels:
+  <no registered kernels>
+
+	 [[Node: lstm_0/CudnnRNN = CudnnRNN[T=DT_FLOAT, direction="unidirectional", dropout=0, input_mode="linear_input", is_training=true, rnn_mode="lstm", seed=87654321, seed2=0](lstm_0/transpose, lstm_0/ExpandDims_1, lstm_0/ExpandDims_2, lstm_0/concat_1)]]
+
