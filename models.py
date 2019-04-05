@@ -6,7 +6,7 @@ TO DO:
 
 import numpy as np
 from keras.models import Model
-from keras.layers import Input, Dense, Dropout, Activation, Embedding, Reshape, Concatenate
+from keras.layers import Input, Dense, Dropout, Activation, Embedding, Reshape, Concatenate, CuDNNLSTM
 from keras.layers import Conv1D, MaxPooling1D, LSTM, Bidirectional, GlobalMaxPooling1D, Lambda
 from sklearn.naive_bayes import MultinomialNB
 
@@ -30,12 +30,12 @@ def layered_LSTM(x_, num_layers, hidden_state_size, stateful, bidirectional = Fa
 
         if bidirectional == False:
             h_out_ = LSTM(units = hidden_state_size,
-                          return_sequences = True, stateful = stateful,
-                          name = "lstm_" + suffix + str(i))(h_in_)
+                               return_sequences = True, stateful = stateful,
+                               name = "lstm_" + suffix + str(i))(h_in_)
         elif bidirectional == True:
             h_out_ = Bidirectional(LSTM(units = hidden_state_size,
-                                        return_sequences = True, stateful = stateful,
-                                        name = "bilstm_" + str(i)),
+                                             return_sequences = True, stateful = stateful,
+                                             name = "bilstm_" + str(i)),
                                    merge_mode = 'concat')(h_in_)
 
     return h_out_
@@ -82,7 +82,7 @@ class LSTMSoftmax:
         # shape is now [batch_size, hidden_state_size]
 
         # output layer
-        predictions_ = Dense(16, activation='softmax', name = 'softmax_output')(lstm_out_)
+        predictions_ = Dense(17, activation='softmax', name = 'softmax_output')(lstm_out_)
 
         self.model = Model(inputs = inputs_, outputs=predictions_)
 
@@ -140,7 +140,7 @@ class CNN:
             # shape is now [batch_size, filters]
 
             # Lee and Dernoncourt applied dropout here
-            stv_ = Dropout(rate = dropout_rate, name = "dropout")(stv_)
+            stv_ = Dropout(rate = dropout_rate, name = "dropout_" + str(i))(stv_)
             stv_s_.append(stv_)
 
         # we now construct FF layers for t-d2 ..., t-1, t
@@ -172,7 +172,7 @@ class CNN:
         # shape is now [batch_size, (d2+1) * hidden_units]
 
         # output layer
-        predictions_ = Dense(16, activation='softmax', name = 'softmax_output')(ff_t_)
+        predictions_ = Dense(17, activation='softmax', name = 'softmax_output')(ff_t_)
 
         self.model = Model(inputs = inputs_, outputs=predictions_)
 
@@ -246,7 +246,7 @@ class BiLSTMCRF:
 
         ### LINEAR CHAIN CRF OUTPUT LAYER ##
 
-        predictions_ = CRF(16)(c_out_)
+        predictions_ = CRF(17)(c_out_)
 
         self.model = Model(inputs = inputs_, outputs = predictions_)
 

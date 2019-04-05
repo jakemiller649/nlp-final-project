@@ -61,7 +61,7 @@ class Conversation:
         """adfasdf"""
         from contractions import contractions
 
-        with open(filedir + "\\words\\" + self.convo_id + ".words.xml") as infile:
+        with open(filedir + "/words/" + self.convo_id + ".words.xml") as infile:
             # open file, parse xml
             convo_tree = ET.parse(infile)
             convo_root = convo_tree.getroot()
@@ -170,13 +170,13 @@ class AMI_Corpus:
         self.max_convo_len = max_convo_len
 
         if filedir is None:
-            filedir = os.getcwd() + "\\data"
+            filedir = os.getcwd() + "/data"
         print("Loading corpus from", filedir)
 
-        for file in os.listdir(filedir + "\\dialogueActs"):
+        for file in os.listdir(filedir + "/dialogueActs"):
 
             if file.endswith("dialog-act.xml"):
-                with open(filedir + "\\dialogueActs\\" + file) as infile:
+                with open(filedir + "/dialogueActs/" + file) as infile:
                     # open file, parse xml
                     convo_tree = ET.parse(infile)
                     convo_root = convo_tree.getroot()
@@ -438,37 +438,42 @@ class UtteranceGenerator(Sequence):
         # Returns
             A batch
         """
-        start = idx * self.batch_size
-        end = (idx + 1) * self.batch_size
+        start = idx * self.batch_size #+ self.sequence_length - 1
+        end = (idx + 1) * self.batch_size #+ self.sequence_length - 1
+        
+        if end > len(self.combined_utterances) - self.sequence_length: # end cases
+            end = len(self.combined_utterances) - self.sequence_length
 
         if self.sequence_length == 1:
             batch_x = np.array([u.word_ids for u in self.combined_utterances[start:end]])
-            batch_y = np.array([u.da_type for u in self.combined_utterances[start:end]])
         else:
             sub_batches_x = []
-            sub_batches_y = []
             for idx in range(start,end):
-                sub_batch_x = [u.word_ids for u in self.combined_utterances[(idx - self.sequence_length + 1):idx+1]]
-                sub_batch_y = [u.da_type for u in self.combined_utterances[(idx - self.sequence_length + 1):idx+1]]
+                sub_batch_x = np.array([u.word_ids for u in self.combined_utterances[idx:idx+self.sequence_length]])
                 sub_batches_x.append(sub_batch_x)
-                sub_batches_y.append(sub_batch_y)
 
             batch_x = np.array(sub_batches_x)
-            batch_y = np.array(sub_batches_y)
             # batch x shape is [batch_size, sequence_length, utterance_length]
-            # batch y shape is [batch_size, sequence_length]
 
-        return batch_x, batch_y
+        batch_y = np.array([u.da_type for u in self.combined_utterances[start:end]], dtype = np.int)
+        # batch_y shape is currently [batch,]
+        
+        # convert batch_y to one-hot
+        batch_y_oh = np.zeros((batch_y.shape[0], 17))
+        batch_y_oh[np.arange(batch_y.shape[0]), batch_y] = 1
+        
+        # batch_y_oh is [batch_size, 17]
+        
+        return batch_x, batch_y_oh
 
     def __len__(self):
         """Number of batch in the Sequence.
         # Returns
             The number of batches in the Sequence.
         """
-        return int(np.ceil(len(self.combined_utterances) / float(self.batch_size)))
+        return int(np.ceil( (len(self.combined_utterances) - self.sequence_length + 1) / self.batch_size) )
 
     def __iter__(self):
         """Create a generator that iterate over the Sequence."""
-        for item in (self[i] for i in range(self.sequence_length - 1, len(self))):
-            # so if sequence length is 1, you start at idx 0. if it's 5 you start at idx 4
+        for item in (self[i] for i in range(len(self))):
             yield item
