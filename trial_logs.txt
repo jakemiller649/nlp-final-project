@@ -189,3 +189,122 @@ Traceback (most recent call last):
   File "/home/jake_miller/anaconda3/envs/new_env/lib/python3.6/json/encoder.py", line 376, in _iterencode_dict
     raise TypeError("key " + repr(key) + " is not a string")
 TypeError: key <built-in function time> is not a string
+Using TensorFlow backend.
+WARNING:tensorflow:From /home/jake_miller/anaconda3/envs/new_env/lib/python3.6/site-packages/tensorflow/python/framework/op_def_library.py:263: colocate_with (from tensorflow.python.framework.ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Colocations handled automatically by placer.
+2019-04-05 20:00:29.500684: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 FMA
+2019-04-05 20:00:29.511127: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2300000000 Hz
+2019-04-05 20:00:29.512787: I tensorflow/compiler/xla/service/service.cc:150] XLA service 0x55cf179b4070 executing computations on platform Host. Devices:
+2019-04-05 20:00:29.512823: I tensorflow/compiler/xla/service/service.cc:158]   StreamExecutor device (0): <undefined>, <undefined>
+OMP: Info #212: KMP_AFFINITY: decoding x2APIC ids.
+OMP: Info #210: KMP_AFFINITY: Affinity capable, using global cpuid leaf 11 info
+OMP: Info #154: KMP_AFFINITY: Initial OS proc set respected: 0-15
+OMP: Info #156: KMP_AFFINITY: 16 available OS procs
+OMP: Info #157: KMP_AFFINITY: Uniform topology
+OMP: Info #179: KMP_AFFINITY: 1 packages x 8 cores/pkg x 2 threads/core (8 total cores)
+OMP: Info #214: KMP_AFFINITY: OS proc to physical thread map:
+OMP: Info #171: KMP_AFFINITY: OS proc 0 maps to package 0 core 0 thread 0 
+OMP: Info #171: KMP_AFFINITY: OS proc 8 maps to package 0 core 0 thread 1 
+OMP: Info #171: KMP_AFFINITY: OS proc 1 maps to package 0 core 1 thread 0 
+OMP: Info #171: KMP_AFFINITY: OS proc 9 maps to package 0 core 1 thread 1 
+OMP: Info #171: KMP_AFFINITY: OS proc 2 maps to package 0 core 2 thread 0 
+OMP: Info #171: KMP_AFFINITY: OS proc 10 maps to package 0 core 2 thread 1 
+OMP: Info #171: KMP_AFFINITY: OS proc 3 maps to package 0 core 3 thread 0 
+OMP: Info #171: KMP_AFFINITY: OS proc 11 maps to package 0 core 3 thread 1 
+OMP: Info #171: KMP_AFFINITY: OS proc 4 maps to package 0 core 4 thread 0 
+OMP: Info #171: KMP_AFFINITY: OS proc 12 maps to package 0 core 4 thread 1 
+OMP: Info #171: KMP_AFFINITY: OS proc 5 maps to package 0 core 5 thread 0 
+OMP: Info #171: KMP_AFFINITY: OS proc 13 maps to package 0 core 5 thread 1 
+OMP: Info #171: KMP_AFFINITY: OS proc 6 maps to package 0 core 6 thread 0 
+OMP: Info #171: KMP_AFFINITY: OS proc 14 maps to package 0 core 6 thread 1 
+OMP: Info #171: KMP_AFFINITY: OS proc 7 maps to package 0 core 7 thread 0 
+OMP: Info #171: KMP_AFFINITY: OS proc 15 maps to package 0 core 7 thread 1 
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2102 thread 0 bound to OS proc set 0
+2019-04-05 20:00:29.514328: I tensorflow/core/common_runtime/process_util.cc:71] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+WARNING:tensorflow:From /home/jake_miller/anaconda3/envs/new_env/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py:3445: calling dropout (from tensorflow.python.ops.nn_ops) with keep_prob is deprecated and will be removed in a future version.
+Instructions for updating:
+Please use `rate` instead of `keep_prob`. Rate should be set to `rate = 1 - keep_prob`.
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2165 thread 1 bound to OS proc set 1
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2166 thread 2 bound to OS proc set 2
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2168 thread 4 bound to OS proc set 4
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2167 thread 3 bound to OS proc set 3
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2169 thread 5 bound to OS proc set 5
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2170 thread 6 bound to OS proc set 6
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2171 thread 7 bound to OS proc set 7
+WARNING:tensorflow:From /home/jake_miller/anaconda3/envs/new_env/lib/python3.6/site-packages/tensorflow/python/ops/math_ops.py:3066: to_int32 (from tensorflow.python.ops.math_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.cast instead.
+Loading corpus from /home/jake_miller/final/nlp-final-project/data
+Begin corpus post-processing ...
+Splitting corpus into training and test ...
+Creating vocabulary from training set ...
+Found 8379 unique words.
+Building initial embedding matrix ...
+(8381, 300)
+loading pretrained vectors from numberbatch-en.txt
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2145 thread 8 bound to OS proc set 8
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2199 thread 9 bound to OS proc set 9
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2200 thread 10 bound to OS proc set 10
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2201 thread 11 bound to OS proc set 11
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2202 thread 12 bound to OS proc set 12
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2203 thread 13 bound to OS proc set 13
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2204 thread 14 bound to OS proc set 14
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2205 thread 15 bound to OS proc set 15
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2206 thread 16 bound to OS proc set 0
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2207 thread 17 bound to OS proc set 1
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2208 thread 18 bound to OS proc set 2
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2210 thread 20 bound to OS proc set 4
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2209 thread 19 bound to OS proc set 3
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2212 thread 22 bound to OS proc set 6
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2211 thread 21 bound to OS proc set 5
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2213 thread 23 bound to OS proc set 7
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2144 thread 24 bound to OS proc set 8
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2214 thread 25 bound to OS proc set 9
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2215 thread 26 bound to OS proc set 10
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2216 thread 27 bound to OS proc set 11
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2217 thread 28 bound to OS proc set 12
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2218 thread 29 bound to OS proc set 13
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2219 thread 30 bound to OS proc set 14
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2220 thread 31 bound to OS proc set 15
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2221 thread 32 bound to OS proc set 0
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2223 thread 34 bound to OS proc set 2
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2222 thread 33 bound to OS proc set 1
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2224 thread 35 bound to OS proc set 3
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2225 thread 36 bound to OS proc set 4
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2226 thread 37 bound to OS proc set 5
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2227 thread 38 bound to OS proc set 6
+OMP: Info #250: KMP_AFFINITY: pid 2102 tid 2228 thread 39 bound to OS proc set 7
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
+OMP: Warning #190: Forking a process while a parallel region is active is potentially unsafe.
