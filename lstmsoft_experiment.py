@@ -33,7 +33,8 @@ def run_model():
     num_layers = np.random.randint(2,16) # lstm layers
     hidden_state_size = np.random.randint(100,400)
     dropout_rate = round(np.random.uniform(0,1,size=None), 3)
-    embed_vec = np.random.choice(['glove100', 'glove200', 'glove300', 'numberbatch', 'lexvec'])
+    #embed_vec = np.random.choice(['glove100', 'glove200', 'glove300', 'numberbatch', 'lexvec'])
+    embed_vec = 'numberbatch'
 
     ## start the timer
     start = time()
