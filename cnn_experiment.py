@@ -66,7 +66,7 @@ def run_model():
     csv_logger = CSVLogger('logs/cnn_history_' + right_now) # log epochs in case I want to look back later
 
     # note to self, maybe change validation_steps and validation_freq
-    history = cnn.model.fit_generator(ug_train, epochs=EPOCHS, verbose=1, callbacks=[es, csv_logger],
+    history = cnn.model.fit_generator(ug_train, epochs=EPOCHS, verbose=0, callbacks=[es, csv_logger],
                                       validation_data=ug_val, #validation_freq=1,
                                       use_multiprocessing=True, shuffle=True)
 
