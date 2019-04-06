@@ -17,24 +17,26 @@ Hyperparamers to test:
 """
 
 import utils
-import models
+import models_tf_only as models
 import numpy as np
 from time import time
 from datetime import datetime
-from keras.callbacks import EarlyStopping, CSVLogger # maybe more
+from tensorflow.keras.callbacks import EarlyStopping, CSVLogger # maybe more
 import json
 
 def run_model():
 
     BATCH_SIZE = 512
-    EPOCHS = 50
+    EPOCHS = 10 # it seemed to converge by this point anyway
 
     # choose hyperparameters
     num_layers = np.random.randint(2,16) # lstm layers
     hidden_state_size = np.random.randint(100,400)
     dropout_rate = round(np.random.uniform(0,1,size=None), 3)
-    #embed_vec = np.random.choice(['glove100', 'glove200', 'glove300', 'numberbatch', 'lexvec'])
-    embed_vec = 'numberbatch'
+    embed_vec = np.random.choice(['glove200', 'glove300', 'numberbatch'])
+    bidirectional = np.random.choice([True, False])
+    stateful = False
+    trainable_embed = np.random.choice([True, False])
 
     ## start the timer
     start = time()
@@ -47,7 +49,7 @@ def run_model():
                               num_layers = num_layers,
                               dropout_rate = dropout_rate,
                               hidden_state_size = hidden_state_size,
-                              stateful = False, bidirectional = False, trainable_embed = False)
+                              stateful = stateful, bidirectional = bidirectional, trainable_embed = trainable_embed)
 
     lstm.model.compile(optimizer = 'adagrad', metrics = ['acc'], loss = 'categorical_crossentropy')
 
@@ -59,23 +61,27 @@ def run_model():
     es = EarlyStopping(monitor='val_loss', patience=5, verbose=0)
 
     right_now = datetime.now().isoformat() # timestamp
-    csv_logger = CSVLogger('logs/lstm_history_' + right_now + ".csv") # log epochs in case I want to look back later
+    csv_logger = CSVLogger('logs/lstm_history_' + right_now) # log epochs in case I want to look back later
 
     # note to self, maybe change validation_steps and validation_freq
-    history = lstm.model.fit_generator(ug_train, epochs=EPOCHS, verbose=0, callbacks=[es, csv_logger],
-                      validation_data=ug_val,  #validation_freq=1,
+    history = lstm.model.fit_generator(ug_train, epochs=EPOCHS, verbose=1, callbacks=[es, csv_logger],
+                      validation_data=ug_val, #validation_steps=100, #validation_freq=1,
                       use_multiprocessing=False, shuffle=True)
 
     results = {"num_layers":num_layers, "hidden_state_size":hidden_state_size,"dropout_rate":dropout_rate,
                "embed_vec":embed_vec, "acc":history.history['acc'][-5:], "val_acc":history.history['acc'][-5:],
-               "loss":history.history['loss'][-5:], "val_loss":history.history['val_loss'][-5:], "time":(time() - start)}
+               "loss":history.history['loss'][-5:], "val_loss":history.history['val_loss'][-5:], "time":time() - start,
+                "trainable_embed":trainable_embed, "stateful":stateful, "bidirectional":bidirectional}
+    
+    results = {str(k):str(v) for k,v in results.items()}
 
     with open("logs/lstm_params_" + right_now + ".json", "w") as f:
         json.dump(results, f)
-   
-    print("-----------------------------------------------")
+        
+    print("-------------------")
+
 
 if __name__ == "__main__":
     experiment_start = time()
-    while time() - experiment_start < 7200: # start with an hour, see how it does
+    while time() - experiment_start < 7200: # start with two hours, see how it does
         run_model()
