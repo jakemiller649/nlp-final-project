@@ -235,8 +235,13 @@ class BiLSTMCRF:
             encoded_utterances.append(lstm_out_)
 
         #### CONVERSATION-LEVEL ENCODER ###
-        conv_ = Concatenate(axis = 1)(encoded_utterances)
-        # shape is now [batch_size, convo_len*hidden_state_size]
+        if len(encoded_utterances) > 1:
+            conv_ = Concatenate(axis = 1)(encoded_utterances)
+            # shape is now [batch_size, convo_len*hidden_state_size]
+     
+        else:
+            conv_ = encoded_utterances[0]
+        
         conv_ = Reshape((sequence_length, -1))(conv_)
         # shape is now [batch_size, convo_len, hidden_state_size]
 
