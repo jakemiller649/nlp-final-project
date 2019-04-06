@@ -8,7 +8,7 @@ import xml.etree.ElementTree as ET
 import re
 from sklearn.model_selection import train_test_split
 from collections import Counter
-from keras.utils import Sequence
+from tensorflow.keras.utils import Sequence
 import numpy as np
 
 # import pandas as pd
@@ -407,13 +407,14 @@ class UtteranceGenerator(Sequence):
     Inherits Keras Sequence class to optimize multiprocessing
     doc string goes here"""
 
-    def __init__(self, corpus, mode, batch_size, sequence_length = 1):
+    def __init__(self, corpus, mode, batch_size, sequence_length = 1, conv = False):
         """
         Args
         Returns
         """
         self.batch_size = batch_size
         self.sequence_length = sequence_length
+        self.conv = conv
         assert self.sequence_length >= 1
 
         if mode == "train":
@@ -444,7 +445,7 @@ class UtteranceGenerator(Sequence):
         if end > len(self.combined_utterances) - self.sequence_length: # end cases
             end = len(self.combined_utterances) - self.sequence_length
 
-        if self.sequence_length == 1:
+        if self.sequence_length == 1 and self.conv is False:
             batch_x = np.array([u.word_ids for u in self.combined_utterances[start:end]])
         else:
             sub_batches_x = []
@@ -453,7 +454,7 @@ class UtteranceGenerator(Sequence):
                 sub_batches_x.append(sub_batch_x)
 
             batch_x = np.array(sub_batches_x)
-            # batch x shape is [batch_size, sequence_length, utterance_length]
+        # batch x shape is [batch_size, sequence_length, utterance_length]
 
         batch_y = np.array([u.da_type for u in self.combined_utterances[start:end]], dtype = np.int)
         # batch_y shape is currently [batch,]
