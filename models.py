@@ -193,14 +193,6 @@ class BiLSTMCRF:
 
         from keras_contrib.layers import CRF
 
-
-        ### call pad convos on corpus
-        ## DELETE
-        #if corpus.max_convo_len is None:
-            #corpus.max_convo_len = 50 # literal placeholder
-
-        # this model only takes whole conversations at a time, so its input shape is
-        # [batch_size, convo_length, utterance_length]
         inputs_ = Input(shape = (sequence_length, corpus.max_utt_length), name = "input")
 
         # embedding layer
@@ -235,8 +227,14 @@ class BiLSTMCRF:
             encoded_utterances.append(lstm_out_)
 
         #### CONVERSATION-LEVEL ENCODER ###
-        conv_ = Concatenate(axis = 1)(encoded_utterances)
-        # shape is now [batch_size, convo_len*hidden_state_size]
+        #### CONVERSATION-LEVEL ENCODER ###
+        if len(encoded_utterances) > 1:
+            conv_ = Concatenate(axis = 1)(encoded_utterances)
+            # shape is now [batch_size, convo_len*hidden_state_size]
+     
+        else:
+            conv_ = encoded_utterances[0]
+        
         conv_ = Reshape((sequence_length, -1))(conv_)
         # shape is now [batch_size, convo_len, hidden_state_size]
 
