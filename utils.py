@@ -8,10 +8,9 @@ import xml.etree.ElementTree as ET
 import re
 from sklearn.model_selection import train_test_split
 from collections import Counter
-from tensorflow.keras.utils import Sequence
+from keras.utils import Sequence
 import numpy as np
 
-# import pandas as pd
 
 class Utterance:
     """
@@ -407,7 +406,7 @@ class UtteranceGenerator(Sequence):
     Inherits Keras Sequence class to optimize multiprocessing
     doc string goes here"""
 
-    def __init__(self, corpus, mode, batch_size, sequence_length = 1, conv = False):
+    def __init__(self, corpus, mode, batch_size, sequence_length = 1, conv = False, kumar = False):
         """
         Args
         Returns
@@ -415,6 +414,8 @@ class UtteranceGenerator(Sequence):
         self.batch_size = batch_size
         self.sequence_length = sequence_length
         self.conv = conv
+        self.kumar = kumar
+        
         assert self.sequence_length >= 1
 
         if mode == "train":
@@ -456,14 +457,41 @@ class UtteranceGenerator(Sequence):
             batch_x = np.array(sub_batches_x)
         # batch x shape is [batch_size, sequence_length, utterance_length]
 
-        batch_y = np.array([u.da_type for u in self.combined_utterances[start:end]], dtype = np.int)
-        # batch_y shape is currently [batch,]
-        
-        # convert batch_y to one-hot
-        batch_y_oh = np.zeros((batch_y.shape[0], 17))
-        batch_y_oh[np.arange(batch_y.shape[0]), batch_y] = 1
-        
-        # batch_y_oh is [batch_size, 17]
+        if self.kumar is False:
+            # regular LSTM and the CNN yield only label at a time
+            
+            batch_y = np.array([u.da_type for u in self.combined_utterances[start:end]], dtype = np.int)
+            # batch_y shape is currently [batch,]
+
+            # convert batch_y to one-hot
+            batch_y_oh = np.zeros((batch_y.shape[0], 17))
+            batch_y_oh[np.arange(batch_y.shape[0]), batch_y] = 1
+            # batch_y_oh is [batch_size, num_classes]
+            
+        else:
+            # The LSTM-CRF expects one label per utterance, so a sequence length of 5 should yield 5 labels
+            # whereas for the CNN we only try to predict the last label
+            sub_batches_y = []
+            for idx in range(start,end):
+                sub_batch_y = np.array([u.da_type for u in self.combined_utterances[idx:idx+self.sequence_length]])
+                sub_batches_y.append(sub_batch_y)
+
+            batch_y = np.array(sub_batches_y)
+            # shape is currently [batch_size, sequence_length]
+            
+            # convert batch_y to one-hot
+            # using this method: https://gist.github.com/frnsys/91a69f9f552cbeee7b565b3149f29e3e
+            batch_y_oh = np.zeros((batch_y.shape[0],batch_y.shape[1], 17))
+            
+            # this part is [0 ... batch_size, but reshaped into rows
+            layer_idx = np.arange(batch_y.shape[0]).reshape(batch_y.shape[0], 1)
+            
+            # this is [0 ... sequence_length], but batch_size rows
+            component_idx = np.tile(np.arange(batch_y.shape[1]), (batch_y.shape[0], 1))
+            
+            # select indices according to category label
+            batch_y_oh[layer_idx, component_idx, batch_y] = 1            
+            # batch_y_oh is [batch_size, sequence_length, num_classes]
         
         return batch_x, batch_y_oh
 
