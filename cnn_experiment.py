@@ -74,7 +74,7 @@ def run_model():
 
 
     results = {"d1":d1, "d2":d2, "filters":filters, "kernel_size":kernel_size, "hidden_units":hidden_units, "dropout_rate":dropout_rate,
-               "embed_vec":embed_vec, "acc":history.history['acc'][-5:], "val_acc":history.history['acc'][-5:],
+               "embed_vec":embed_vec, "acc":history.history['acc'][-5:], "val_acc":history.history['val_acc'][-5:],
                "loss":history.history['loss'][-5:], "val_loss":history.history['val_loss'][-5:], "time":(time() - start), 
                "trainable_embed":trainable_embed}
 

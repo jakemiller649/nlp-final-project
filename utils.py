@@ -500,7 +500,11 @@ class UtteranceGenerator(Sequence):
         # Returns
             The number of batches in the Sequence.
         """
-        return int(np.ceil( (len(self.combined_utterances) - self.sequence_length + 1) / self.batch_size) )
+        l = int(np.ceil( (len(self.combined_utterances) - self.sequence_length + 1) / self.batch_size) )
+        if self.kumar:
+            return l-1
+        else:
+            return l
 
     def __iter__(self):
         """Create a generator that iterate over the Sequence."""

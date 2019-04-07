@@ -69,7 +69,7 @@ def run_model():
                       use_multiprocessing=False, shuffle=True)
 
     results = {"num_layers":num_layers, "hidden_state_size":hidden_state_size,"dropout_rate":dropout_rate,
-               "embed_vec":embed_vec, "acc":history.history['acc'][-5:], "val_acc":history.history['acc'][-5:],
+               "embed_vec":embed_vec, "acc":history.history['acc'][-5:], "val_acc":history.history['val_acc'][-5:],
                "loss":history.history['loss'][-5:], "val_loss":history.history['val_loss'][-5:], "time":time() - start,
                 "trainable_embed":trainable_embed, "stateful":stateful, "bidirectional":bidirectional}
     

@@ -29,11 +29,11 @@ def layered_LSTM(x_, num_layers, hidden_state_size, stateful, bidirectional = Fa
             h_in_ = h_out_
 
         if bidirectional == False:
-            h_out_ = LSTM(units = hidden_state_size,
+            h_out_ = CuDNNLSTM(units = hidden_state_size,
                                return_sequences = True, stateful = stateful,
                                name = "lstm_" + suffix + str(i))(h_in_)
         elif bidirectional == True:
-            h_out_ = Bidirectional(LSTM(units = hidden_state_size,
+            h_out_ = Bidirectional(CuDNNLSTM(units = hidden_state_size,
                                              return_sequences = True, stateful = stateful,
                                              name = "bilstm_" + str(i)),
                                    merge_mode = 'concat')(h_in_)
