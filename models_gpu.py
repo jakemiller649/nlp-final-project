@@ -193,14 +193,6 @@ class BiLSTMCRF:
 
         from keras_contrib.layers import CRF
 
-
-        ### call pad convos on corpus
-        ## DELETE
-        #if corpus.max_convo_len is None:
-            #corpus.max_convo_len = 50 # literal placeholder
-
-        # this model only takes whole conversations at a time, so its input shape is
-        # [batch_size, convo_length, utterance_length]
         inputs_ = Input(shape = (sequence_length, corpus.max_utt_length), name = "input")
 
         # embedding layer
@@ -261,6 +253,7 @@ class BiLSTMCRF:
         from keras_contrib.metrics import crf_viterbi_accuracy
 
         self.model.compile(optimizer = 'adagrad', metrics = [crf_viterbi_accuracy], loss = crf_loss)
+
 
 
 class NaiveBayes():

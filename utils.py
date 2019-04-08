@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 import re
 from sklearn.model_selection import train_test_split
 from collections import Counter
+#from tensorflow.keras.utils import Sequence
 from keras.utils import Sequence
 import numpy as np
 
@@ -448,7 +449,7 @@ class UtteranceGenerator(Sequence):
         if end > len(self.combined_utterances) - self.sequence_length: # end cases
             end = len(self.combined_utterances) - self.sequence_length
 
-        if self.algo is "LSTM_Soft:
+        if self.algo is "LSTM_Soft":
             batch_x = np.array([u.word_ids for u in self.combined_utterances[start:end]])
             # batch x shape is [batch_size, utterance_length]
         else:
@@ -472,7 +473,7 @@ class UtteranceGenerator(Sequence):
         if self.algo is not "LSTM_CRF":
             # regular LSTM yield only one label at a time
             # # CNN also yields one, but it is at end of sequence
-            sm1 = self.sequence - 1
+            sm1 = self.sequence_length - 1
             
             batch_y = np.array([u.da_type for u in self.combined_utterances[start + sm1:end + sm1]], dtype = np.int)
             # batch_y shape is currently [batch,]
@@ -485,7 +486,7 @@ class UtteranceGenerator(Sequence):
         else:
             # The LSTM-CRF expects one label per utterance, so a sequence length of 5 should yield 5 labels
             sub_batches_y = []
-            for idx in range(start,end):
+            for idx in range(start,end, step):
                 sub_batch_y = np.array([u.da_type for u in self.combined_utterances[idx:idx+self.sequence_length]])
                 sub_batches_y.append(sub_batch_y)
 
@@ -513,7 +514,11 @@ class UtteranceGenerator(Sequence):
         # Returns
             The number of batches in the Sequence.
         """
-        return int(np.ceil( (len(self.combined_utterances) - self.sequence_length + 1) / self.batch_size) )
+        l = int(np.ceil( (len(self.combined_utterances) - self.sequence_length + 1) / self.batch_size) )
+        if self.algo is "LSTM_CRF":
+            return l-1
+        else:
+            return l
 
     def __iter__(self):
         """Create a generator that iterate over the Sequence."""
