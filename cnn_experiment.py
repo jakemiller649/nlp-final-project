@@ -17,7 +17,7 @@ Hyperparamers to test:
 """
 
 import utils
-import models_tf_only as models
+import models_gpu as models
 import numpy as np
 from time import time
 from datetime import datetime
@@ -36,8 +36,8 @@ def run_model(it_no):
     EPOCHS = 25
 
     # choose hyperparameters randomly
-    d1 = np.random.randint(0,3)
-    d2 = np.random.randint(0,3)
+    d1 = np.random.randint(0,4)
+    d2 = np.random.randint(0,4)
     filters = np.random.randint(50,1001)
     kernel_size = np.random.randint(1,11)
     hidden_units = np.random.randint(25,251)
@@ -64,14 +64,14 @@ def run_model(it_no):
     cnn.model.compile(optimizer = 'adagrad', metrics = ['acc'], loss = 'categorical_crossentropy')
 
     # create our generators
-    ug_train = utils.UtteranceGenerator(corpus, "train", batch_size = BATCH_SIZE, sequence_length = (d1 + d2 + 1), conv = True)
-    ug_val = utils.UtteranceGenerator(corpus, "val", batch_size = BATCH_SIZE, sequence_length = (d1 + d2 + 1), conv = True)
+    ug_train = utils.UtteranceGenerator(corpus, "train", batch_size = BATCH_SIZE, sequence_length = (d1 + d2 + 1), algo = "CNN")
+    ug_val = utils.UtteranceGenerator(corpus, "val", batch_size = BATCH_SIZE, sequence_length = (d1 + d2 + 1), algo = "CNN")
 
     # create keras callbacks
     es = EarlyStopping(monitor='val_loss', patience=5, verbose=0)
 
     # log things just in case
-    csv_logger = CSVLogger('logs/cnn_history_' + it_no + ".csv") # log epochs in case I want to look back later
+    csv_logger = CSVLogger('logs/cnn_history_' + str(it_no) + ".csv") # log epochs in case I want to look back later
 
     # train the thing
     history = cnn.model.fit_generator(ug_train, epochs=EPOCHS, verbose=1, callbacks=[es, csv_logger],
@@ -91,10 +91,6 @@ def run_model(it_no):
     print("-----------------------------------------------")
 
 if __name__ == "__main__":
-    # create results log
-    with open("logs/cnn_exp_2.csv", "w") as f:
-        headers = "it,d1,d2,filters,kernel_size,hidden_units,dropout_rate,embed_vec,acc,val_acc, loss,val_loss,time,trainable_embed\n"
-        f.write(headers)
         
     experiment_start = time()
     it_no = 0
