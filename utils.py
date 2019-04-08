@@ -406,17 +406,19 @@ class UtteranceGenerator(Sequence):
     Inherits Keras Sequence class to optimize multiprocessing
     doc string goes here"""
 
-    def __init__(self, corpus, mode, batch_size, sequence_length = 1, conv = False, kumar = False):
+    def __init__(self, corpus, mode, batch_size, sequence_length = 1, algo = None):
         """
         Args
         Returns
         """
         self.batch_size = batch_size
         self.sequence_length = sequence_length
-        self.conv = conv
-        self.kumar = kumar
+        self.algo = algo
         
         assert self.sequence_length >= 1
+        
+        if algo not in ["LSTM_Soft", "CNN", "LSTM_CRF"]:
+            raise Exception("Algo must be one of [\"LSTM_Soft\", \"CNN\", \"LSTM_CRF\"]")
 
         if mode == "train":
             convos = corpus.train_convos
@@ -440,27 +442,39 @@ class UtteranceGenerator(Sequence):
         # Returns
             A batch
         """
-        start = idx * self.batch_size #+ self.sequence_length - 1
-        end = (idx + 1) * self.batch_size #+ self.sequence_length - 1
+        start = idx * self.batch_size 
+        end = (idx + 1) * self.batch_size 
         
         if end > len(self.combined_utterances) - self.sequence_length: # end cases
             end = len(self.combined_utterances) - self.sequence_length
 
-        if self.sequence_length == 1 and self.conv is False:
+        if self.algo is "LSTM_Soft:
             batch_x = np.array([u.word_ids for u in self.combined_utterances[start:end]])
+            # batch x shape is [batch_size, utterance_length]
         else:
+            if self.algo is "LSTM_CRF":
+                # the LSTM_CRF algorithm guesses on each utterance in a sequence, so 
+                # we step over the data in sequence_length steps
+                step = self.sequence_length
+            else:
+                # whereas the CNN, even if it takes t-1, t-2, etc., as input, only guesses about 
+                # the utterance at t, so we only step forward one at a time
+                step = 1
+            
             sub_batches_x = []
-            for idx in range(start,end):
+            for idx in range(start,end, step):
                 sub_batch_x = np.array([u.word_ids for u in self.combined_utterances[idx:idx+self.sequence_length]])
                 sub_batches_x.append(sub_batch_x)
-
             batch_x = np.array(sub_batches_x)
-        # batch x shape is [batch_size, sequence_length, utterance_length]
+            # batch x shape is [batch_size, sequence_length, utterance_length]
 
-        if self.kumar is False:
-            # regular LSTM and the CNN yield only label at a time
+        ## moving on to Y batches
+        if self.algo is not "LSTM_CRF":
+            # regular LSTM yield only one label at a time
+            # # CNN also yields one, but it is at end of sequence
+            sm1 = self.sequence - 1
             
-            batch_y = np.array([u.da_type for u in self.combined_utterances[start:end]], dtype = np.int)
+            batch_y = np.array([u.da_type for u in self.combined_utterances[start + sm1:end + sm1]], dtype = np.int)
             # batch_y shape is currently [batch,]
 
             # convert batch_y to one-hot
@@ -470,7 +484,6 @@ class UtteranceGenerator(Sequence):
             
         else:
             # The LSTM-CRF expects one label per utterance, so a sequence length of 5 should yield 5 labels
-            # whereas for the CNN we only try to predict the last label
             sub_batches_y = []
             for idx in range(start,end):
                 sub_batch_y = np.array([u.da_type for u in self.combined_utterances[idx:idx+self.sequence_length]])
