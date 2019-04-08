@@ -24,12 +24,18 @@ from datetime import datetime
 from tensorflow.keras.callbacks import EarlyStopping, CSVLogger # maybe more
 import json
 
-def run_model():
+def run_model(it_no):
+    """
+    Args:
+      - it_no: iteration number just for logging to a file. Originally I used a timestamp but the 
+        filenames ended up becoming too long and I was unable to move them around.
+    """
+  
 
     BATCH_SIZE = 512
     EPOCHS = 25
 
-    # choose hyperparameters
+    # choose hyperparameters randomly
     d1 = np.random.randint(0,3)
     d2 = np.random.randint(0,3)
     filters = np.random.randint(50,1001)
@@ -64,28 +70,34 @@ def run_model():
     # create keras callbacks
     es = EarlyStopping(monitor='val_loss', patience=5, verbose=0)
 
-    right_now = datetime.now().isoformat() # timestamp
-    csv_logger = CSVLogger('logs/cnn_history_' + right_now + ".csv") # log epochs in case I want to look back later
+    # log things just in case
+    csv_logger = CSVLogger('logs/cnn_history_' + it_no + ".csv") # log epochs in case I want to look back later
 
-    
+    # train the thing
     history = cnn.model.fit_generator(ug_train, epochs=EPOCHS, verbose=1, callbacks=[es, csv_logger],
                                           validation_data=ug_val, #validation_freq=1,
                                           use_multiprocessing=False, shuffle=True)
 
+    # write the results to a csv
+    results = [it_no, d1, d2, filters, kernel_size, hidden_units, dropout_rate, embed_vec, history.history['acc'][-5:], 
+               history.history['val_acc'][-5:], history.history['loss'][-5:], history.history['val_loss'][-5:], (time() - start), 
+               trainable_embed]
 
-    results = {"d1":d1, "d2":d2, "filters":filters, "kernel_size":kernel_size, "hidden_units":hidden_units, "dropout_rate":dropout_rate,
-               "embed_vec":embed_vec, "acc":history.history['acc'][-5:], "val_acc":history.history['acc'][-5:],
-               "loss":history.history['loss'][-5:], "val_loss":history.history['val_loss'][-5:], "time":(time() - start), 
-               "trainable_embed":trainable_embed}
-
-    results = {str(k):str(v) for k,v in results.items()}
+    results = ",".join([str(n) for n in results]) + "\n"
     
-    with open("logs/cnn_params_" + right_now + ".json", "w") as f:
-        json.dump(results, f)
+    with open("logs/cnn_exp_2.csv", "a") as f:
+        f.write(results)
     
     print("-----------------------------------------------")
 
 if __name__ == "__main__":
+    # create results log
+    with open("logs/cnn_exp_2.csv", "w") as f:
+        headers = "it,d1,d2,filters,kernel_size,hidden_units,dropout_rate,embed_vec,acc,val_acc, loss,val_loss,time,trainable_embed\n"
+        f.write(headers)
+        
     experiment_start = time()
+    it_no = 0
     while time() - experiment_start < 7200: # go for two hours, see how it does
-        run_model()
+        run_model(it_no)
+        it_no += 1
