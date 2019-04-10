@@ -1,6 +1,7 @@
-"""description goes here
-
-TO DO:
+"""
+This file includes the models for two of my three models (plus a Naive Bayes). It contains:
+- LSTM-Softmax (based on Khanpour et al 2016)
+- CNN (based on Lee and Dernoncourt 2016)
 
 """
 
@@ -11,7 +12,21 @@ from tensorflow.keras.layers import Conv1D, MaxPooling1D, LSTM, Bidirectional, G
 from sklearn.naive_bayes import MultinomialNB
 
 
-def embedding_layer(corpus, embed_dim, batch_size, inputs, trainable):
+def embedding_layer(corpus, embed_dim, inputs, trainable):
+    """
+    Common embedding layer to be used by all models.
+    Args:
+      - embed_dim: this is predetermined based on what pretraiend word embeddings we are using
+      - corpus: This the corpus we are training the model on, and it provides the initial embedding matrix
+        (see utils file for how this is developed) and the input dimension
+      - inputs: input vector from training data (must be output from keras Input() layer)
+            - this is either [batch_size, utterance_length] or [batch_size, sequence_length, utterance_length]
+              depending on which model is running
+      - trainable: boolean as to whether our pretrained word embeddings will be updated during model training
+    Returns:
+      - [batch_size, utterance_length, embed_dim] or [batch_size, sequence_length, utterance_length, embed_dim]
+    """
+    
     return Embedding(input_dim = len(corpus.word_to_id),
                        output_dim = embed_dim,
                        weights = [corpus.init_embedding_matrix],
@@ -19,6 +34,19 @@ def embedding_layer(corpus, embed_dim, batch_size, inputs, trainable):
                        name = "embedding")(inputs)
 
 def layered_LSTM(x_, num_layers, hidden_state_size, stateful, bidirectional = False, suffix = ""):
+    
+    """
+    Creates a stack of LSTM layers
+    Args:
+     - x_: inputs from previous layer
+     - num_layers: number of LSTM layers
+     - hidden_state_size: dim of hidden state size
+     - stateful: from keras docs: boolean the last state for each sample at 
+                 index i in a batch will be used as initial state 
+                 for the sample of index i in the following batch
+     - bidirectional: boolean as to whether the LSTM layers are bidirectional
+     - suffix: a string that is incremented if necessary for naming layers
+     """
 
     for i in range(num_layers):
         if i == 0:
@@ -42,7 +70,7 @@ def layered_LSTM(x_, num_layers, hidden_state_size, stateful, bidirectional = Fa
 
 
 class LSTMSoftmax:
-    """This modle is based on Khanpour et al 2016. Paper://www.aclweb.org/anthology/C16-1189
+    """This model is based on Khanpour et al 2016. Paper://www.aclweb.org/anthology/C16-1189
     """
 
 
@@ -50,9 +78,18 @@ class LSTMSoftmax:
                 dropout_rate = 0.5, hidden_state_size = 100, stateful = False,
                 bidirectional = False, trainable_embed = False):
         """
-
-        Note to self, it does not sound like they passed states between batches, but why can't I try?
-        Also they did not do bidirectional either (I will try as well??)
+        Args:
+         - corpus: the AMI_Corpus object (see utils)
+         - batch_size: batch_size for training
+         - num_layers: number of LSTM layers
+         - dropout_rate: rate for dropout layers
+         - hidden_state_size: dim of hidden state size
+         - stateful: from keras docs: boolean the last state for each sample at 
+                     index i in a batch will be used as initial state 
+                     for the sample of index i in the following batch
+         - bidirectional: boolean as to whether the LSTM layers are bidirectional
+         - trainable_embed: whether we want our embedding layer (which has pretrained word vectors) to be updated
+           during training
         """
 
         # this model only takes one utterance at a time, so its input shape is
@@ -62,7 +99,7 @@ class LSTMSoftmax:
         # embedding layer
         embed_dim = corpus.embed_dim
         x_ = embedding_layer(corpus = corpus,
-                             batch_size = batch_size, embed_dim = embed_dim,
+                             embed_dim = embed_dim,
                              inputs = inputs_, trainable = trainable_embed)
         # shape is now [batch_size, utterance_length, embed_dim]
 
@@ -98,15 +135,23 @@ class CNN:
 
     Their best results came from their CNN so that's what I am focusing on here.
 
-    Two important hyperparameters: d1 and d2, which denote 'history sizes'.
-
-    Longer explanation goes here.
+    Two important hyperparameters: d1 and d2, which denote 'history sizes'. See my paper (or theirs, I guess
+    for full explanation). 
     """
 
     def __init__(self, corpus, batch_size, filters, kernel_size,
                  hidden_units, dropout_rate = 0, d1 = 0, d2 = 0, trainable_embed = False):
         """
-
+        Args:
+         - corpus: the AMI_Corpus object (see utils)
+         - batch_size: batch_size for training
+         - filters: number of convolutional filters
+         - kernel_size: kernel size of filters
+         - hidden_units: size of feed-forward layers
+         - dropout_rate: rate for dropout layers
+         - d1, d2: history parameters
+         - trainable_embed: whether we want our embedding layer (which has pretrained word vectors) to be updated
+           during training
         """
 
         self.corpus = corpus
@@ -118,7 +163,7 @@ class CNN:
 
         # embedding
         x_ = embedding_layer(corpus = self.corpus,
-                             batch_size = batch_size, embed_dim = embed_dim,
+                             embed_dim = embed_dim,
                              inputs = inputs_, trainable = trainable_embed)
         # output: [batch_size, seq_length, utt_length, embed_dim]
 
@@ -180,86 +225,20 @@ class CNN:
         self.model.compile(optimizer = 'adagrad', metrics = ['acc'], loss = 'categorical_crossentropy')
 
 
-class BiLSTMCRF:
-    """Model based on Kumar et al 2018, the current high score on the
-       switchboard corpus.
-
-       This is different than the previous models in that it takes whole conversations
-       as inputs.
-       """
-
-    def __init__(self, corpus, batch_size = 25, sequence_length = 50, dropout_rate = 0.0, bidirectional = True, num_layers = 1,
-                 hidden_state_size = 100, stateful = False, trainable_embed = False):
-
-        from keras_contrib.layers import CRF
-
-        inputs_ = Input(shape = (sequence_length, corpus.max_utt_length), name = "input")
-
-        # embedding layer
-        embed_dim = corpus.embed_dim
-        x_ = embedding_layer(corpus = corpus,
-                             batch_size = batch_size, embed_dim = embed_dim,
-                             inputs = inputs_, trainable = trainable_embed)
-        # shape is now [batch_size, convo_length, utterance_length, embed_dim]
-
-        # dropout layer
-        x_ = Dropout(rate = dropout_rate, name = "dropout")(x_)
-
-        ### UTTERANCE-LEVEL ENCODER ####
-        encoded_utterances = []
-
-        # Each utterance gets its own encoder that consists of LSTM and pooling
-        for i in range(sequence_length):
-            # selecting utterance at a time
-            u_ = Lambda(lambda x: x[:,i,:,:], name = "Extraction_" + str(i))(x_)
-
-            # LSTM
-            h_out_ = layered_LSTM(x_ = u_, num_layers = num_layers,
-                                  hidden_state_size = hidden_state_size, stateful = stateful,
-                                  bidirectional = bidirectional, suffix = 'a_')
-            # output shape here is [batch_size, utterance_length, hidden_state_size]
-            # if bidirectional is true, in which case last dim is 2*hidden_state_size
-
-            # Pooling
-            # we are last pooling by each utterance
-            lstm_out_ = Lambda(lambda x: x[:,-1,:], name = "last_pooling"+ str(i))(h_out_)
-            # size here is now [batch_size, hidden_state_size]
-            encoded_utterances.append(lstm_out_)
-
-        #### CONVERSATION-LEVEL ENCODER ###
-        if len(encoded_utterances) > 1:
-            conv_ = Concatenate(axis = 1)(encoded_utterances)
-            # shape is now [batch_size, convo_len*hidden_state_size]
-     
-        else:
-            conv_ = encoded_utterances[0]
-        
-        conv_ = Reshape((sequence_length, -1))(conv_)
-        # shape is now [batch_size, convo_len, hidden_state_size]
-
-        c_out_ = layered_LSTM(x_ = conv_, num_layers = num_layers,
-                              hidden_state_size = hidden_state_size, stateful = stateful,
-                              bidirectional = bidirectional, suffix = 'b_')
-
-        ### LINEAR CHAIN CRF OUTPUT LAYER ##
-
-        predictions_ = CRF(17)(c_out_)
-
-        self.model = Model(inputs = inputs_, outputs = predictions_)
-
-
-    def compile(self):
-        from keras_contrib.losses import crf_loss
-        from keras_contrib.metrics import crf_viterbi_accuracy
-
-        self.model.compile(optimizer = 'adagrad', metrics = [crf_viterbi_accuracy], loss = crf_loss)
-
-
-
 class NaiveBayes():
-    """In order to have a baseline to compare against."""
+    """As a sanity check, we are seeing what Naive Bayes would give score."""
 
     def __init__(self, corpus, ngram_range = (1,1), tfidf = False):
+        """
+        Initialize model class.
+        
+        Args: 
+          - corpus. The corpus we are working with
+          - ngram_range: Whether we want bigrams, unigrams, etc. Tuple of length two - upper and lower bounds
+            on ngram length
+          - tfidf: boolean as to whether vectorize each utterance with simple word counts or with tfidf
+         """
+        
         from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 
         if tfidf is True:
@@ -289,7 +268,7 @@ class NaiveBayes():
         self.y_test = [u.da_type for u in test_utterances if u.da_type is not None]
 
     def random_search(self, cv = 5, n_iter = 20, param_dist = None):
-        """ """
+        """ Conducts a random search of the NB smoothing parameter (alpha)"""
         from sklearn.model_selection import RandomizedSearchCV
         from scipy.stats import uniform
 
@@ -303,8 +282,13 @@ class NaiveBayes():
         rscv.fit(self.x_train, self.y_train)
         return rscv.cv_results_
 
-    def train():
-        pass
+    def train(self, alpha = 1):
+        """Train Multinomial NB with alpha parameter"""
+        self.mnb = MultinomialNB(alpha = alpha)
+        self.mnb.fit(self.x_train, self.y_train)
 
-    def eval_on_test():
-        pass
+    def eval_on_test(self):
+        """Evaluate on test data"""
+        from sklearn.metrics import accuracy_score
+        pred = self.mnb.predict(self.x_test)
+        acc = accuracy_score(self.y_test, pred)
