@@ -118,13 +118,22 @@ from keras.utils import Sequence
    
 class UtteranceGenerator(Sequence):
     """
-    Inherits Keras Sequence class to optimize multiprocessing
-    doc string goes here"""
+    Batch generator based on Keras's Sequence class
+    """
 
     def __init__(self, corpus, mode, batch_size, sequence_length = 1, algo = None):
         """
         Args
-        Returns
+        - corpus: must be an AMI_Corpus that has already done training/test split and create vocab steps
+        - mode: training, test, or validation
+        - sequence_length: defaults to 1
+        - algo: Must be one of LSTM_Soft, CNN, or LSTM_CRF. Why, you ask?
+        
+        Each of the three algorithms tested in this project takes slightly different combinations of x/y:
+        - LSTM_Soft generates one utterance for x and one label for y
+        - CNN generates a sequence of utterances for x but one label for y (that corresponds to the last utterance)
+        - LSTM_CRF generates a sequence of utterances for x and a corresponding sequence of labels for y for using in the CRF
+          output layer
         """
         self.batch_size = batch_size
         self.sequence_length = sequence_length
