@@ -1,4 +1,14 @@
-"""Summary of what's contained in this module:
+"""
+This module contains various functions and classes that help take the dialog acts from the raw XML files (there are XML files that 
+contain the conversations themselves, plus XML files that contain the DAs) to something that can be fed into a neural network. 
+
+My basic hierarchy of classes is:
+AMI_Corpus
+|--Conversation
+   |--Utterance
+
+This file also includes UtteranceGenerator, which is a batch iterator that inherits keras's Sequence class, which is optimized
+for batch processing.
 
 """
 
@@ -8,20 +18,15 @@ import xml.etree.ElementTree as ET
 import re
 from sklearn.model_selection import train_test_split
 from collections import Counter
-#from tensorflow.keras.utils import Sequence
-from keras.utils import Sequence
+from tensorflow.keras.utils import Sequence
 import numpy as np
 
 
 class Utterance:
     """
-    Desription
-    Methods
-    Attributes
+    Each utterance has words, length, a da_type (label) and a convseration (convo_id)
+    that it is associated with.
     """
-    # len
-    # label
-    # spit out sentence
 
     def __init__(self, convo_id):
         self.convo_id = convo_id
@@ -34,14 +39,14 @@ class Utterance:
 
 class Conversation:
     """
-    Desription
-    Methods
-    Attributes
+    Desription: Subdivision of corpus. Consists of utterances
+    Methods: initialize, add utterance, get words from 
+    Attributes: convo_id, a list of utterances, a list of corresponding labels, a length, and a vocabulary
     """
 
     def __init__(self, convo_id):
         """
-        Args:
+        Args: conversation id
         """
 
         self.convo_id = convo_id  # file name
@@ -58,14 +63,19 @@ class Conversation:
         self.labels.append(utterance.da_type)
 
     def get_words(self, filedir):
-        """adfasdf"""
+        """The DA files (one per conversation) just have a list of utterances, their DA type, and word indices from a different 
+        conversation file. This function goes to the second file, pulls out the words, and adds them to a global vocabulary """
+        
+        # side note, I am handling contractions by getting rid of them
         from contractions import contractions
 
+        
         with open(filedir + "/words/" + self.convo_id + ".words.xml") as infile:
             # open file, parse xml
             convo_tree = ET.parse(infile)
             convo_root = convo_tree.getroot()
 
+        # pull out all the words from the words file, with their word index
         # the leaf numbers do not align perfectly with word numbers, so we need to make sure we are
         # getting the correct words for each utterance
         convo_words = {}
@@ -79,6 +89,7 @@ class Conversation:
             w = leaf.text
             convo_words[word_idx] = w
 
+        # go back to the utterances, see what word indices they correspond to, and fill them in
         for utterance in self.utterances:
             for i in range(utterance.start, utterance.end+1):
 
@@ -151,15 +162,26 @@ class Conversation:
 
 class AMI_Corpus:
     """
-    Desription
-    Methods
-    Attributes
+    Most important class, it loads the corpus from the files, splits it, creates vocab, and much more!
+    
+    Methods: initialize, test/train split, create vocab, create embedding matrix
+    
     """
 
     def __init__(self, filedir = None, seed = None,
-                 max_vocab = 10000, max_utt_length = None, max_convo_len = None,
+                 max_vocab = 10000, max_utt_length = None,
                  embed_vec = None, embed_dim = 100):
-        """Load corpus from file"""
+        """
+        Args:
+         - filedir: Where are the XML files. If none, defaults to file structure provided by the AMI Corpus
+           download.
+         - seed. Random seed for training/split, which I used for reproducibility
+         - max_vocab. Defaults to 10,000 but it turns out there aren't that many words in there
+         - max_utt_length: max utterance length, if you want to pad/clip at a certain length. Otherwise it uses 
+           99th percentile length
+         - embed_vec: choose from several pretrained word embeddings options
+         - embed_dim: if you don't choose pretrained, you must choose an embedding dimension
+        """
 
         # initialize some attributes
         self.conversations = []
@@ -167,7 +189,6 @@ class AMI_Corpus:
         self.conversation_lengths = []
         self.max_vocab = max_vocab
         self.max_utt_length = max_utt_length
-        self.max_convo_len = max_convo_len
 
         if filedir is None:
             filedir = os.getcwd() + "/data"
@@ -237,7 +258,7 @@ class AMI_Corpus:
         # split into test and training
         self.training_split(split_seed = seed)
 
-        # create vocab
+        # create vocab on training set
         self.create_vocab()
 
         # create initial embedding matrix
@@ -265,10 +286,13 @@ class AMI_Corpus:
         self.test_convos = self.conversations[split_point_2:]
 
     def create_vocab(self):
-        """doc
-        Args:
-          - max_vocab = number of words you want to include in dictionary (default: 10k)
-          - max_utt_length len = maximum utterance length; calculated below if None provided
+        """
+        Creates a vocabulary with word_to_id and id_to_word dicts. Some lines of code lifted from the 
+        w266 utils file. 
+        
+        Note that this is called after training/test split -- it only builds vocab and embed matrix 
+        on words from training set
+        
         """
         from math import floor
 
@@ -312,12 +336,13 @@ class AMI_Corpus:
 
     def create_embed_matrix(self, embed_vec, embed_dim):
         """
+        This function adapts the following blog post for using pretrained word embeddings:
         https://blog.keras.io/using-pre-trained-word-embeddings-in-a-keras-model.html
 
-        docstring
         Args:
           - embed_vec -- one of None (default),
             'glove100', 'glove200', 'glove300', 'numberbatch', or 'lexvec'
+          - embed_dim, which you must provide if not using pretrained vectors
         """
 
         print("Building initial embedding matrix ...")
@@ -355,11 +380,9 @@ class AMI_Corpus:
                         # add vector to matrix
                         self.init_embedding_matrix[n] = [float(i) for i in l[1:]]
 
-            # leave this, make a note of how many words not found
-            #self.unfound_words = [self.id_to_word[i] for i in unfound_ids]
+            # note to self, how many unfound words are there
             self.embed_dim = embed_dim
             self.unfound_words = len(unfound_ids)
-            #for i in len(self)
 
         else:
             # no pretrained vectors, just initialize a random matrix
@@ -368,50 +391,30 @@ class AMI_Corpus:
             self.embed_dim = embed_dim
             self.unfound_words = None
 
-    def pad_clip(convos, max_convo_len):
-        """Function for padding/clipping conversations (next function explains why this
-        may occur."""
-
-        for c in convos:
-            if c.length == max_len:
-                # just right, good to go
-                continue
-            elif c.length > max_len:
-                # conversation is too long
-                c.utterances = c.utterances[:max_len]
-                c.length = max_len
-            else:
-                # conversation is too short
-                how_short = max_len - c.length
-                for _ in how_short:
-                    dummy_utterance = Utterance(convo_id = c.convo_id)
-                    # <pad> is 0 in our ID table, so we can just use np.zeros
-                    dummy_utterance.word_ids = np.zeros(max_utt_length)
-                    # I might have to fix this part??
-                    dummy_utterance.da_type = None
-                    c.add(dummy_utterance)
-
-
-    def pad_convos(self):
-        """While two of the models I am testing take either one utterance at a time as input, or a short
-        sequence of utterances, Kumar et al 2018 takes whole conversations as inputs. So padding/clipping
-        here as appropriate. (This function is only called within )"""
-
-        if self.max_convo_len is None:
-            c_lens = [c.length for c in self.train_convos]
-            self.max_convo_len = floor(np.percentile(c_lens, 95))
-
 
 class UtteranceGenerator(Sequence):
     """
-    Inherits Keras Sequence class to optimize multiprocessing
-    doc string goes here"""
+    Batch generator based on Keras's Sequence class. Generates either one utterance per batch, or a sequence
+    of utterances.
+    """
 
     def __init__(self, corpus, mode, batch_size, sequence_length = 1, algo = None):
         """
         Args
-        Returns
+        - corpus: must be an AMI_Corpus that has already done training/test split and create vocab steps
+        - mode: training, test, or validation
+        - sequence_length: defaults to 1
+        - algo: Must be one of LSTM_Soft, CNN, or LSTM_CRF. Why, you ask?
+        
+        Each of the three algorithms tested in this project takes slightly different combinations of x/y:
+        - LSTM_Soft generates one utterance for x and one label for y
+        - CNN generates a sequence of utterances for x but one label for y (that corresponds to the last utterance)
+        - LSTM_CRF generates a sequence of utterances for x and a corresponding sequence of labels for y for using in the CRF
+          output layer
+        
         """
+        
+        
         self.batch_size = batch_size
         self.sequence_length = sequence_length
         self.algo = algo
