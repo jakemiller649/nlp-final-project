@@ -289,6 +289,7 @@ class NaiveBayes():
 
     def eval_on_test(self):
         """Evaluate on test data"""
-        from sklearn.metrics import accuracy_score
+        from sklearn.metrics import accuracy_score, log_loss
         pred = self.mnb.predict(self.x_test)
         acc = accuracy_score(self.y_test, pred)
+        return acc
