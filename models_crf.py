@@ -10,6 +10,20 @@ from keras.layers import Conv1D, MaxPooling1D, LSTM, Bidirectional, GlobalMaxPoo
 
 
 def embedding_layer(corpus, embed_dim, batch_size, inputs, trainable):
+    """
+    Common embedding layer to be used by all models.
+    Args:
+      - embed_dim: this is predetermined based on what pretraiend word embeddings we are using
+      - corpus: This the corpus we are training the model on, and it provides the initial embedding matrix
+        (see utils file for how this is developed) and the input dimension
+      - inputs: input vector from training data (must be output from keras Input() layer)
+            - this is either [batch_size, utterance_length] or [batch_size, sequence_length, utterance_length]
+              depending on which model is running
+      - trainable: boolean as to whether our pretrained word embeddings will be updated during model training
+    Returns:
+      - [batch_size, utterance_length, embed_dim] or [batch_size, sequence_length, utterance_length, embed_dim]
+    """
+    
     return Embedding(input_dim = len(corpus.word_to_id),
                        output_dim = embed_dim,
                        weights = [corpus.init_embedding_matrix],
@@ -17,6 +31,18 @@ def embedding_layer(corpus, embed_dim, batch_size, inputs, trainable):
                        name = "embedding")(inputs)
 
 def layered_LSTM(x_, num_layers, hidden_state_size, stateful, bidirectional = False, suffix = ""):
+    """
+    Creates a stack of LSTM layers
+    Args:
+     - x_: inputs from previous layer
+     - num_layers: number of LSTM layers
+     - hidden_state_size: dim of hidden state size
+     - stateful: from keras docs: boolean the last state for each sample at 
+                 index i in a batch will be used as initial state 
+                 for the sample of index i in the following batch
+     - bidirectional: boolean as to whether the LSTM layers are bidirectional
+     - suffix: a string that is incremented if necessary for naming layers
+     """
 
     for i in range(num_layers):
         if i == 0:
@@ -48,6 +74,22 @@ class BiLSTMCRF:
 
     def __init__(self, corpus, batch_size = 25, sequence_length = 50, dropout_rate = 0.0, bidirectional = True, num_layers = 1,
                  hidden_state_size = 100, stateful = False, trainable_embed = False):
+        """
+        Args
+          - corpus: AMI_Corpus object (see utils)
+          - batch_size
+          - sequence_length: Instead of passing in conversations, I passed in sequences of utterances. This parameter
+            specifies the length to be passed in.
+          - dropout_rate
+          - bidirectional: boolean whether the LSTM layers are bidirectional
+          - num_layers: number of stacked LSTM layers (for both utterance level encoder and sequence level)
+          - hidden_state_size: hidden state size of LSTM
+          -  stateful: from keras docs: boolean the last state for each sample at 
+                     index i in a batch will be used as initial state 
+                     for the sample of index i in the following batch
+          - trainable_embed: whether we want our embedding layer (which has pretrained word vectors) to be updated
+           during training
+        """
 
         from keras_contrib.layers import CRF
 
@@ -84,7 +126,6 @@ class BiLSTMCRF:
             # size here is now [batch_size, hidden_state_size]
             encoded_utterances.append(lstm_out_)
 
-        #### CONVERSATION-LEVEL ENCODER ###
         #### CONVERSATION-LEVEL ENCODER ###
         if len(encoded_utterances) > 1:
             conv_ = Concatenate(axis = 1)(encoded_utterances)
