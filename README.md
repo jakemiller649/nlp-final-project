@@ -1,5 +1,5 @@
 # W266 Final Project
-This repo contains the code from my final project for UC-Berkeley MIDS Program W266, *Natural Language Processing with Deep Learning*.
+This repo contains the code from my final project for UC-Berkeley MIDS Program W266, **Natural Language Processing with Deep Learning**.
 
 Notes on some files:
 - models.py. This module contains the code for the LSTM-Softmax and CNN models from my paper
